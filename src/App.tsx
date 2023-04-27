@@ -8,8 +8,8 @@ const App: React.FC = () => {
   return (
     <Routes>
       <Route path="/opentok-react" element={<Home />} />
-      <Route path="/member" element={<Member />} />
-      <Route path="/therapist" element={<Therapist />} />
+      <Route path="/opentok-react/member" element={<Member />} />
+      <Route path="/opentok-react/therapist" element={<Therapist />} />
     </Routes>
   );
 };
