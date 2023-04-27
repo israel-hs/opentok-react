@@ -3,7 +3,8 @@ html,
 #root {
   /* margin: 0; */
   display: flex;
-  place-items: center;
+  flex-direction: column;
+  /* place-items: center; */
   height: 90%;
   width: 90%;
   /* min-width: 320px;
