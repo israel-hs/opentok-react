@@ -7,7 +7,7 @@ import Home from "./Home";
 const App: React.FC = () => {
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
+      <Route path="/opentok-react" element={<Home />} />
       <Route path="/member" element={<Member />} />
       <Route path="/therapist" element={<Therapist />} />
     </Routes>
