@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import OT from "@opentok/client";
 
-import { apiKey, token, sessionId } from "./opentok.config";
+import { apiKey, token, sessionId } from "../opentok.config";
 
 // Handling all of our errors here by alerting them
 function handleError(error: any) {
@@ -11,6 +11,7 @@ function handleError(error: any) {
 }
 
 const Video: React.FC = () => {
+  console.log("Video");
   const subscriberRef = useRef<HTMLDivElement>(null);
   const publisherRef = useRef<HTMLDivElement>(null);
   const [session, setSession] = useState<OT.Session>();
@@ -25,7 +26,7 @@ const Video: React.FC = () => {
       {
         insertMode: "append",
         width: "100%",
-        height: "90%",
+        height: "100%",
       },
       handleError
     );
