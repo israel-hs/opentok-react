@@ -5,10 +5,10 @@ const Home: React.FC = () => {
   return (
     <ul>
       <li>
-        <Link to="/opentok-react/member">Member</Link>
+        <Link to="/opentok-react/lobby/member">Member Lobby</Link>
       </li>
       <li>
-        <Link to="/opentok-react/therapist">Therapist</Link>
+        <Link to="/opentok-react/lobby/therapist">Therapist Lobby</Link>
       </li>
     </ul>
   );

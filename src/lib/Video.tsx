@@ -1,7 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
 import OT from "@opentok/client";
 
+import { User } from "./types";
+// import { baseURL } from "../config";
 import { apiKey, token, sessionId } from "../opentok.config";
+import { removeMember } from "../api/callApi";
 
 // Handling all of our errors here by alerting them
 function handleError(error: any) {
@@ -18,8 +21,8 @@ const videoProperties: any = {
 
 type Status = string | undefined;
 
-const Video: React.FC = () => {
-  console.log("Video");
+const Video: React.FC<User> = ({ userId }) => {
+  console.log("Video", userId);
   const subscriberRef = useRef<HTMLDivElement>(null);
   const publisherRef = useRef<HTMLDivElement>(null);
   const [session, setSession] = useState<OT.Session>();
@@ -28,22 +31,52 @@ const Video: React.FC = () => {
   // const [connectionStatus, setConnectionStatus] = useState<Status>();
 
   useEffect(() => {
-    const initialSession = OT.initSession(apiKey, sessionId);
-    setSession(initialSession);
+    let initialSession: OT.Session;
+    let initialPublisher: OT.Publisher;
 
-    const initialPublisher = OT.initPublisher(
-      "publisher",
-      videoProperties,
-      handleError
-    );
-    setPublisher(initialPublisher);
+    const addMember = async () => {
+      try {
+        const addRequest = await fetch(
+          "https://opentok-node.onrender.com/add-member",
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+            method: "POST",
+            body: JSON.stringify({ member: userId }),
+          }
+        );
+
+        if (!addRequest.ok) {
+          throw new Error("error while adding a member");
+        }
+
+        initialSession = OT.initSession(apiKey, sessionId);
+        setSession(initialSession);
+
+        initialPublisher = OT.initPublisher(
+          "publisher",
+          videoProperties,
+          handleError
+        );
+        setPublisher(initialPublisher);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    addMember();
 
     return () => {
+      debugger;
       initialSession.disconnect();
       session?.disconnect();
 
       initialPublisher.destroy();
       publisher?.destroy();
+
+      // use signals to interrupt a possibly ongoing request to add-member?
+      removeMember(userId);
     };
   }, []);
 
