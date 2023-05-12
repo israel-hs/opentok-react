@@ -408,6 +408,18 @@
     "@jridgewell/resolve-uri" "3.1.0"
     "@jridgewell/sourcemap-codec" "1.4.14"
 
+"@lit-labs/ssr-dom-shim@^1.0.0", "@lit-labs/ssr-dom-shim@^1.1.0":
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/@lit-labs/ssr-dom-shim/-/ssr-dom-shim-1.1.1.tgz#64df34e2f12e68e78ac57e571d25ec07fa460ca9"
+  integrity sha512-kXOeFbfCm4fFf2A3WwVEeQj55tMZa8c8/f9AKHMobQMkzNUfUj+antR3fRPaZJawsa1aZiP/Da3ndpZrwEe4rQ==
+
+"@lit/reactive-element@^1.3.0", "@lit/reactive-element@^1.6.0":
+  version "1.6.1"
+  resolved "https://registry.yarnpkg.com/@lit/reactive-element/-/reactive-element-1.6.1.tgz#0d958b6d479d0e3db5fc1132ecc4fa84be3f0b93"
+  integrity sha512-va15kYZr7KZNNPZdxONGQzpUr+4sxVu7V/VG7a8mRfPPXUyhEYj5RzXCQmGrlP3tAh0L3HHm5AjBMFYRqlM9SA==
+  dependencies:
+    "@lit-labs/ssr-dom-shim" "^1.0.0"
+
 "@nodelib/fs.scandir@2.1.5":
   version "2.1.5"
   resolved "https://registry.yarnpkg.com/@nodelib/fs.scandir/-/fs.scandir-2.1.5.tgz#7619c2eb21b25483f6d167548b4cfd5a7488c3d5"
@@ -479,6 +491,11 @@
   version "7.3.13"
   resolved "https://registry.yarnpkg.com/@types/semver/-/semver-7.3.13.tgz#da4bfd73f49bd541d28920ab0e2bf0ee80f71c91"
   integrity sha512-21cFJr9z3g5dW8B0CVI9g2O9beqaThGQ6ZFBqHfwhzLDKUxaqTIy3vnfah/UPkfOiF2pLq+tGz+W8RyCskuslw==
+
+"@types/trusted-types@^2.0.2":
+  version "2.0.3"
+  resolved "https://registry.yarnpkg.com/@types/trusted-types/-/trusted-types-2.0.3.tgz#a136f83b0758698df454e328759dbd3d44555311"
+  integrity sha512-NfQ4gyz38SL8sDNrSixxU2Os1a5xcdFxipAFxYEuLUlvU2uDwS4NUpsImcf1//SlWItCVMMLiylsxbmNMToV/g==
 
 "@typescript-eslint/eslint-plugin@^5.57.1":
   version "5.59.1"
@@ -578,6 +595,20 @@
     "@babel/plugin-transform-react-jsx-self" "^7.21.0"
     "@babel/plugin-transform-react-jsx-source" "^7.19.6"
     react-refresh "^0.14.0"
+
+"@vonage/video-publisher@^0.0.6":
+  version "0.0.6"
+  resolved "https://registry.yarnpkg.com/@vonage/video-publisher/-/video-publisher-0.0.6.tgz#b0f30ade51e43cbe2d8a4200c95e7d910f019245"
+  integrity sha512-+KEF7M+3Qs4OvWBmcHsLao/tp0RWtbSw5SjTxkfVaw7xbT2ZuDCnU92DxizPdHITQOf8FS/6qYtwDvUzVxERTg==
+  dependencies:
+    lit "^2.3.1"
+
+"@vonage/video-subscriber@^0.0.2":
+  version "0.0.2"
+  resolved "https://registry.yarnpkg.com/@vonage/video-subscriber/-/video-subscriber-0.0.2.tgz#4a196e53c3fa74ddf047e6db3ea0abb651374bcf"
+  integrity sha512-evQzE3uM2eyjJfVL3tmq1yKCvWrhn2lVedOfqBeLE402mhPiVQczHjCw9LKoK+h5Yvqxr9eC+/0dwbaGFsSLXg==
+  dependencies:
+    lit "^2.0.2"
 
 acorn-jsx@^5.3.2:
   version "5.3.2"
@@ -1280,6 +1311,31 @@ levn@^0.4.1:
   dependencies:
     prelude-ls "^1.2.1"
     type-check "~0.4.0"
+
+lit-element@^3.3.0:
+  version "3.3.2"
+  resolved "https://registry.yarnpkg.com/lit-element/-/lit-element-3.3.2.tgz#9913bf220b85065f0e5f1bb8878cc44f36b50cfa"
+  integrity sha512-xXAeVWKGr4/njq0rGC9dethMnYCq5hpKYrgQZYTzawt9YQhMiXfD+T1RgrdY3NamOxwq2aXlb0vOI6e29CKgVQ==
+  dependencies:
+    "@lit-labs/ssr-dom-shim" "^1.1.0"
+    "@lit/reactive-element" "^1.3.0"
+    lit-html "^2.7.0"
+
+lit-html@^2.7.0:
+  version "2.7.3"
+  resolved "https://registry.yarnpkg.com/lit-html/-/lit-html-2.7.3.tgz#903bfa61f9d3296a0ec94128695e452beb9b1a3a"
+  integrity sha512-9DyLzcn/kbRGowz2vFmSANFbRZTxYUgYYFqzie89w6GLpPUiBCDHfcdeRUV/k3Q2ueYxNjfv46yPCtKAEAPOVw==
+  dependencies:
+    "@types/trusted-types" "^2.0.2"
+
+lit@^2.0.2, lit@^2.3.1:
+  version "2.7.4"
+  resolved "https://registry.yarnpkg.com/lit/-/lit-2.7.4.tgz#ca63d27fda178dbffae0faf2c882b9910e40842c"
+  integrity sha512-cgD7xrZoYr21mbrkZIuIrj98YTMw/snJPg52deWVV4A8icLyNHI3bF70xsJeAgwTuiq5Kkd+ZR8gybSJDCPB7g==
+  dependencies:
+    "@lit/reactive-element" "^1.6.0"
+    lit-element "^3.3.0"
+    lit-html "^2.7.0"
 
 locate-path@^5.0.0:
   version "5.0.0"

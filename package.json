@@ -14,6 +14,8 @@
   },
   "dependencies": {
     "@opentok/client": "^2.25.1",
+    "@vonage/video-publisher": "^0.0.6",
+    "@vonage/video-subscriber": "^0.0.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.10.0"
