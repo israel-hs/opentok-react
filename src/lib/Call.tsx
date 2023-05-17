@@ -1,93 +1,125 @@
-import React, { useRef, useEffect } from "react";
+import OT from "@opentok/client";
+
+import React, { useEffect } from "react";
+import { addMember } from "../api/callApi";
+import { CallProps, StreamCreatedEvent } from "./types";
 import { apiKey, token, sessionId } from "../opentok.config";
 
-import "@vonage/video-publisher/video-publisher.js";
-
-function App() {
-  // Get references to Web Components
-  const publisher = useRef<HTMLElement & { session: any; token: any }>(null);
-  // const subscribers = useRef(null);
-  // const screenshare = useRef(null);
-
-  useEffect(() => {
-    debugger;
-    const OT = window.OT;
-
-    // Initialize an OpenTok Session object
-    const session = OT.initSession(apiKey, sessionId);
-
-    // Set session and token for Web Components
-    publisher.current!.session = session;
-    publisher.current!.token = token;
-  });
-
-  return (
-    <video-publisher
-      width="360px"
-      height="240px"
-      ref={publisher}
-    ></video-publisher>
-  );
-}
-
-export default App;
-
-// import React, { useEffect, useRef } from "react";
-// import type { User } from "./types";
-// import { addMember } from "../api/callApi";
-// import OT from "@opentok/client";
-
-// import "@vonage/video-publisher/video-publisher.js";
-// import { apiKey, token, sessionId } from "../opentok.config";
-
-declare global {
-  namespace JSX {
-    interface IntrinsicElements {
-      "video-publisher": React.DetailedHTMLProps<
-        React.HTMLAttributes<HTMLElement>,
-        HTMLElement
-      > & {
-        width: string;
-        height: string;
-      };
-    }
+function handleError(error?: OT.OTError) {
+  if (error) {
+    alert(error.message);
   }
 }
 
-// const Call: React.FC<User> = ({ userId }) => {
-//   const publisher = useRef<HTMLElement>(null);
+const callProperties: OT.SubscriberProperties = {
+  insertMode: "append",
+  width: "100%",
+  height: "100%",
+};
 
-//   useEffect(() => {
-//     // Initialize an OpenTok Session object
-//     const session = OT.initSession(apiKey, sessionId);
+const Call: React.FC<CallProps> = ({ userId }) => {
+  // let stream: OT.Stream | null;
+  let session: OT.Session;
+  let subscriber: OT.Subscriber;
+  let publisher: OT.Publisher;
 
-//     // let initialSession: OT.Session;
-//     // let initialPublisher: OT.Publisher;
+  const subscribeToSession = (streamToUse: OT.Stream) => {
+    return session.subscribe(
+      streamToUse,
+      "subscriber",
+      callProperties,
+      handleError
+    );
+  };
 
-//     // Set session and token for Web Components
-//     if (publisher.current) {
-//       publisher.current.session = session;
-//       publisher.current.token = token;
-//     }
+  useEffect(() => {
+    const addMemberToCall = async () => {
+      try {
+        await addMember(userId);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    addMemberToCall();
 
-//     const addMemberToCall = async () => {
-//       try {
-//         await addMember(userId);
-//       } catch (error) {
-//         console.error(error);
-//       }
-//     };
+    // we might need poll data from the server every N secs
+    // to check for members connecting and desconnecting for example
 
-//     addMemberToCall();
-//   }, [publisher]);
+    // const interval = setInterval(async () => {
+    //   try {
+    //     const { members: fetchedMembers }: Members = await getMembers();
+    //     // we can get connected subscribers any given time, given the stream like this:
+    //     const subscribers = session.getSubscribersForStream(stream);
+    //   } catch (error) {
+    //     console.error(error);
+    //   }
+    // }, 2000);
 
-//   return (
-//     <video-publisher
-//       width="360px"
-//       height="240px"
-//       ref={publisher}
-//     ></video-publisher>
-//   );
-// };
+    session = OT.initSession(apiKey, sessionId);
 
-// export default Call;
+    session.on("streamCreated", (event: StreamCreatedEvent) => {
+      console.log("streamCreated", event);
+      subscriber = subscribeToSession(event.stream);
+    });
+
+    // Subscribe to a newly created stream
+
+    // Effectively connect to the session
+    session.connect(token, (error) => {
+      console.log("session connect");
+      if (error) {
+        handleError(error);
+      }
+    });
+
+    session.on({
+      // This function runs when session.connect() asynchronously completes
+      sessionConnected: () => {
+        console.log("on session connected");
+        // Create a publisher (video & audio feed), this will create a stream
+        publisher = OT.initPublisher("publisher", callProperties, handleError);
+        session.publish(publisher, handleError);
+      },
+
+      // connectionCreated: function (event: any) {
+      //   console.log("connectionCreated");
+      // },
+      // connectionDestroyed: function (event: any) {
+      //   console.log("connectionDestroyed");
+      // },
+      // sessionDisconnected: function sessionDisconnectHandler(event: any) {
+      //   // The event is defined by the SessionDisconnectEvent class
+      //   console.log("Disconnected from the session.");
+      // },
+    });
+
+    return () => {
+      // clearInterval(interval);
+
+      session.off(); // clean all session listeners
+
+      if (subscriber) {
+        session.unsubscribe(subscriber);
+        console.log("session unsubscribed");
+      }
+
+      if (publisher) {
+        session.unpublish(publisher);
+        publisher.destroy();
+        console.log("publisher destroyed");
+      }
+
+      session.disconnect();
+      console.log("session disconnected");
+    };
+  }, []);
+
+  return (
+    <div id="videos">
+      <div id="subscriber" />
+      <div id="publisher" />
+    </div>
+  );
+};
+
+export default Call;

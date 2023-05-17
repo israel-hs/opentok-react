@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
 import OT from "@opentok/client";
 
-import { User } from "./types";
+import { CallProps } from "./types";
 // import { baseURL } from "../config";
 import { apiKey, token, sessionId } from "../opentok.config";
-import { removeMember } from "../api/callApi";
+import { addMember } from "../api/callApi";
 
 // Handling all of our errors here by alerting them
 function handleError(error: any) {
@@ -13,15 +13,15 @@ function handleError(error: any) {
   }
 }
 
-const videoProperties: any = {
-  insertMode: "append",
-  width: "100%",
-  height: "100%",
-};
+// const videoProperties: any = {
+//   insertMode: "append",
+//   width: "100%",
+//   height: "100%",
+// };
 
 type Status = string | undefined;
 
-const Video: React.FC<User> = ({ userId }) => {
+const Video: React.FC<CallProps> = ({ userId }) => {
   console.log("Video", userId);
   const subscriberRef = useRef<HTMLDivElement>(null);
   const publisherRef = useRef<HTMLDivElement>(null);
@@ -34,29 +34,20 @@ const Video: React.FC<User> = ({ userId }) => {
     let initialSession: OT.Session;
     let initialPublisher: OT.Publisher;
 
-    const addMember = async () => {
+    const addMemberToCall = async () => {
       try {
-        const addRequest = await fetch(
-          "https://opentok-node.onrender.com/add-member",
-          {
-            headers: {
-              "Content-Type": "application/json",
-            },
-            method: "POST",
-            body: JSON.stringify({ member: userId }),
-          }
-        );
-
-        if (!addRequest.ok) {
-          throw new Error("error while adding a member");
-        }
+        await addMember(userId);
 
         initialSession = OT.initSession(apiKey, sessionId);
         setSession(initialSession);
 
         initialPublisher = OT.initPublisher(
           "publisher",
-          videoProperties,
+          {
+            insertMode: "replace",
+            width: "100%",
+            height: "100%",
+          },
           handleError
         );
         setPublisher(initialPublisher);
@@ -65,10 +56,9 @@ const Video: React.FC<User> = ({ userId }) => {
       }
     };
 
-    addMember();
+    addMemberToCall();
 
     return () => {
-      debugger;
       initialSession.disconnect();
       session?.disconnect();
 
@@ -76,7 +66,7 @@ const Video: React.FC<User> = ({ userId }) => {
       publisher?.destroy();
 
       // use signals to interrupt a possibly ongoing request to add-member?
-      removeMember(userId);
+      // removeMember(userId);
     };
   }, []);
 
@@ -108,7 +98,7 @@ const Video: React.FC<User> = ({ userId }) => {
         event.stream,
         "subscriber",
         {
-          insertMode: "append",
+          insertMode: "replace",
           width: "100%",
           height: "100%",
         },
@@ -131,8 +121,14 @@ const Video: React.FC<User> = ({ userId }) => {
       }
     });
 
-    () => {
-      session.unsubscribe(subscriber);
+    return () => {
+      // debugger;
+      if (subscriber) {
+        session.unsubscribe(subscriber);
+        // session.usubscribe is recommended instead of:
+        // subscriber.disconnect();
+        // subscriber.destroy();
+      }
       session.disconnect();
     };
   }, [session, publisher]);

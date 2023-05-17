@@ -1,6 +1,12 @@
 export type Member = string;
 
-export interface User {
+export type RoomType = "core" | "web";
+
+export type StreamCreatedEvent = OT.Event<"streamCreated", OT.Session> & {
+  stream: OT.Stream;
+};
+
+export interface CallProps {
   userId: string;
 }
 

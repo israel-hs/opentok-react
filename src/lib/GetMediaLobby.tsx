@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+
 import type { Member, Members } from "./types";
 import { getMembers, removeMember } from "../api/callApi";
 
@@ -12,10 +14,10 @@ import { getMembers, removeMember } from "../api/callApi";
 
 interface LobbyProps {
   memberId: Member;
-  addToCall: () => void;
+  linkTo: string;
 }
 
-const Lobby: React.FC<LobbyProps> = ({ memberId, addToCall }) => {
+const Lobby: React.FC<LobbyProps> = ({ memberId, linkTo }) => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [connectedMembers, setConnectedMembers] = useState<Members["members"]>(
     []
@@ -66,7 +68,9 @@ const Lobby: React.FC<LobbyProps> = ({ memberId, addToCall }) => {
           ) : (
             <div>There are no connected members</div>
           )}
-          <button onClick={addToCall}>Call</button>
+          <Link to={`/opentok-react/${linkTo}`}>
+            <button>{`Go to ${linkTo}`}</button>
+          </Link>
         </>
       )}
     </>
