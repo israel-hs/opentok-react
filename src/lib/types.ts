@@ -1,5 +1,5 @@
 export type Member = string;
-
+export type Devices = MediaDeviceInfo[];
 export type RoomType = "core" | "web";
 
 export type StreamCreatedEvent = OT.Event<"streamCreated", OT.Session> & {

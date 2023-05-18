@@ -1,0 +1,6 @@
+#devices {
+  display: flex;
+  flex-direction: column;
+  margin: 10px 0 10px;
+  gap: 5px;
+}
