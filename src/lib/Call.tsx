@@ -4,6 +4,11 @@ import React, { useEffect } from "react";
 import { addMember } from "../api/callApi";
 import { CallProps, StreamCreatedEvent } from "./types";
 import { apiKey, token, sessionId } from "../opentok.config";
+import {
+  createPublisherListernerMap,
+  createSessionListenersMap,
+  createSubscriberListenerMap,
+} from "./utils";
 
 function handleError(error?: OT.OTError) {
   if (error) {
@@ -57,13 +62,6 @@ const Call: React.FC<CallProps> = ({ userId }) => {
 
     session = OT.initSession(apiKey, sessionId);
 
-    session.on("streamCreated", (event: StreamCreatedEvent) => {
-      console.log("streamCreated", event);
-      subscriber = subscribeToSession(event.stream);
-    });
-
-    // Subscribe to a newly created stream
-
     // Effectively connect to the session
     session.connect(token, (error) => {
       console.log("session connect");
@@ -72,25 +70,33 @@ const Call: React.FC<CallProps> = ({ userId }) => {
       }
     });
 
+    const sessionEvents = createSessionListenersMap();
+
     session.on({
+      ...sessionEvents,
       // This function runs when session.connect() asynchronously completes
       sessionConnected: () => {
         console.log("on session connected");
         // Create a publisher (video & audio feed), this will create a stream
         publisher = OT.initPublisher("publisher", callProperties, handleError);
+
+        const publisherEvents = createPublisherListernerMap();
+        publisher.on({
+          ...publisherEvents,
+        });
+
         session.publish(publisher, handleError);
       },
+      streamCreated: (event: StreamCreatedEvent) => {
+        // Subscribe to a newly created stream
+        console.log("streamCreated", event);
+        subscriber = subscribeToSession(event.stream);
 
-      // connectionCreated: function (event: any) {
-      //   console.log("connectionCreated");
-      // },
-      // connectionDestroyed: function (event: any) {
-      //   console.log("connectionDestroyed");
-      // },
-      // sessionDisconnected: function sessionDisconnectHandler(event: any) {
-      //   // The event is defined by the SessionDisconnectEvent class
-      //   console.log("Disconnected from the session.");
-      // },
+        const subscriberEvents = createSubscriberListenerMap();
+        subscriber.on({
+          ...subscriberEvents,
+        });
+      },
     });
 
     return () => {
@@ -100,12 +106,14 @@ const Call: React.FC<CallProps> = ({ userId }) => {
 
       if (subscriber) {
         session.unsubscribe(subscriber);
+        subscriber.off();
         console.log("session unsubscribed");
       }
 
       if (publisher) {
         session.unpublish(publisher);
         publisher.destroy();
+        publisher.off();
         console.log("publisher destroyed");
       }
 
