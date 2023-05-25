@@ -6,12 +6,13 @@ export function createPublisherListernerMap() {
     "accessDialogOpened",
     // "audioLevelUpdated", this is triggered all the time
     "destroyed",
+    // "disconnected", this event doesn't exist for the Publisher
     "mediaStopped",
+    "muteForced",
     "streamCreated",
     "streamDestroyed",
     "videoDimensionsChanged",
     "videoElementCreated",
-    "muteForced",
   ];
   return createMapFor(eventsToListenTo, "publisher");
 }
@@ -22,6 +23,7 @@ export function createSubscriberListenerMap() {
     "connected",
     "captionReceived",
     "destroyed",
+    "disconnected",
     "encryptionSecretMismatch",
     "encryptionSecretMatch",
     "videoDisabled",
@@ -41,7 +43,7 @@ export function createSessionListenersMap() {
     "archiveStopped",
     "connectionCreated",
     "connectionDestroyed",
-    "sessionDisconnected:",
+    "sessionDisconnected",
     "sessionConnected",
     "sessionReconnected",
     "sessionReconnecting",
