@@ -68,7 +68,15 @@ There are listing the pending challenges that need to be solved moving forward:
 
 - While the end-to-end call works, connectivity issues haven't been accounted for in this POC, and therefore they are encouraged to be tested and catered for in here before testing them in the HelloSelf platform.
 
-- Event logging needs to be accounte for. A list of the events that we are already logging in the backend for the Member and Expert platforms should be compared against the events we are logging already. The full list of events for each of the entities can be found at the utils [here](src/lib/utils.ts).
+- While we are including the `screenshare` as part of this POC using the `web-components` library, we haven't been able to clean/destroy the stream related to it and thus we could be dealing with memory leak. However, this is working and can be included as part of the requirements for P0.
+
+- Event logging needs to be accounted for. A list of the events that we are already logging in the backend for the Member and Expert platforms should be compared against the events we are logging (to the console) already. The full list of events for each of the entities can be found at the utils [here](src/lib/utils.ts).
+
+# GitHub pages
+
+This POC app can be accessed via GitHub pages at [https://israel-hs.github.io/opentok-react/](https://israel-hs.github.io/opentok-react/).
+
+In order to publish any new development, just run the deploy script by executing `yarn deploy`. This will use local changes to update the artifacts in the GitHub page configuration related to this codebase.
 
 ## Troubleshooting
 
