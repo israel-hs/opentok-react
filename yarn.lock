@@ -596,6 +596,13 @@
     "@babel/plugin-transform-react-jsx-source" "^7.19.6"
     react-refresh "^0.14.0"
 
+"@vonage/screen-share@^0.0.3":
+  version "0.0.3"
+  resolved "https://registry.yarnpkg.com/@vonage/screen-share/-/screen-share-0.0.3.tgz#e4e53a8186248f13ddadb5c78c0851f1d65cf5d1"
+  integrity sha512-z1snZEH9d+ZQ30vAAGFhfXRfYRrRfxjR1otNhkPoNyAFr2LyGUZ0WUYPPsoaTKtb4JurzCMmqYvYN7rf8AJ6yw==
+  dependencies:
+    lit "^2.0.2"
+
 "@vonage/video-publisher@^0.0.6":
   version "0.0.6"
   resolved "https://registry.yarnpkg.com/@vonage/video-publisher/-/video-publisher-0.0.6.tgz#b0f30ade51e43cbe2d8a4200c95e7d910f019245"

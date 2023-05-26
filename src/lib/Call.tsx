@@ -1,6 +1,6 @@
 import OT from "@opentok/client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { addMember } from "../api/callApi";
 import { CallProps, StreamCreatedEvent } from "./types";
 import { apiKey, token, sessionId } from "../opentok.config";
@@ -9,6 +9,8 @@ import {
   createSessionListenersMap,
   createSubscriberListenerMap,
 } from "./utils";
+
+import "@vonage/screen-share/screen-share.js";
 
 function handleError(error?: OT.OTError) {
   if (error) {
@@ -23,6 +25,9 @@ const callProperties: OT.SubscriberProperties = {
 };
 
 const Call: React.FC<CallProps> = ({ userId }) => {
+  const [value, setValue] = useState(0);
+  const screenshare = useRef<HTMLElement & { session: any; token: any }>(null);
+
   // let stream: OT.Stream | null;
   let session: OT.Session;
   let subscriber: OT.Subscriber;
@@ -36,6 +41,31 @@ const Call: React.FC<CallProps> = ({ userId }) => {
       handleError
     );
   };
+
+  // Create a publisher (video & audio feed), this will create a stream
+  const createPublisher = () => {
+    const publisher = OT.initPublisher(
+      "publisher",
+      callProperties,
+      handleError
+    );
+    const publisherEvents = createPublisherListernerMap();
+    publisher.on({ ...publisherEvents });
+    return publisher;
+  };
+
+  // const tryPublishingAgain = () => {
+  //   if (session) {
+  //     console.log("session is not null");
+  //     if (!publisher) {
+  //       console.log("publisher is null");
+  //       publisher = createPublisher();
+  //     }
+  //     session.publish(publisher, handleError);
+  //   } else {
+  //     console.log("session is null");
+  //   }
+  // };
 
   useEffect(() => {
     const addMemberToCall = async () => {
@@ -77,14 +107,7 @@ const Call: React.FC<CallProps> = ({ userId }) => {
       // This function runs when session.connect() asynchronously completes
       sessionConnected: () => {
         console.log("on session connected");
-        // Create a publisher (video & audio feed), this will create a stream
-        publisher = OT.initPublisher("publisher", callProperties, handleError);
-
-        const publisherEvents = createPublisherListernerMap();
-        publisher.on({
-          ...publisherEvents,
-        });
-
+        publisher = createPublisher();
         session.publish(publisher, handleError);
       },
       streamCreated: (event: StreamCreatedEvent) => {
@@ -99,35 +122,76 @@ const Call: React.FC<CallProps> = ({ userId }) => {
       },
     });
 
+    if (screenshare.current) {
+      screenshare.current.session = session;
+      screenshare.current.token = token;
+    }
+
     return () => {
       // clearInterval(interval);
+      console.log("unmounting component");
 
-      session.off(); // clean all session listeners
+      // this is not working: this cleanup function is invoked after unmount
+      // therefore screenshare.current reference is already null:
+      if (screenshare.current) {
+        (screenshare.current as any).disconnectedCallback();
+      }
 
       if (subscriber) {
         session.unsubscribe(subscriber);
         subscriber.off();
-        console.log("session unsubscribed");
+        console.log("subscriber unsubscribed from session");
       }
 
       if (publisher) {
         session.unpublish(publisher);
-        publisher.destroy();
         publisher.off();
-        console.log("publisher destroyed");
+        publisher.destroy();
+        console.log("session unpublished the publisher, publisher destroyed");
       }
 
+      session.off(); // clean all session listeners
       session.disconnect();
       console.log("session disconnected");
     };
-  }, []);
+  }, [value]);
 
   return (
-    <div id="videos">
-      <div id="subscriber" />
-      <div id="publisher" />
-    </div>
+    <>
+      <div id="videos" key={value}>
+        <div id="subscriber" />
+        <div id="publisher" />
+      </div>
+      {/* <button
+        style={{ marginTop: "10px" }}
+        onClick={() => setValue((previousValue) => previousValue + 1)}
+      >
+        Add Value manually
+      </button> */}
+      <screen-share
+        start-text="start"
+        stop-text="stop"
+        width="300px"
+        height="240px"
+        ref={screenshare}
+      ></screen-share>
+      {/* <button onClick={tryPublishingAgain}>Manual Publish</button> */}
+    </>
   );
 };
 
 export default Call;
+
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      "screen-share": React.DetailedHTMLProps<
+        React.HTMLAttributes<HTMLElement>,
+        HTMLElement
+      > & {
+        width: string;
+        height: string;
+      };
+    }
+  }
+}
