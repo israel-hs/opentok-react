@@ -8,6 +8,8 @@ import { getMembers, removeMember } from "../api/callApi";
 
 import "./devices.css";
 
+// import "@vonage/inputs-select/inputs-select.js";
+
 /**
  * This component is meant to wrap a Video component and initially
  * check if someone else is connected (publishing) already.
@@ -24,7 +26,8 @@ interface LobbyProps {
 type DeviceId = MediaDeviceInfo["deviceId"];
 
 const Lobby: React.FC<LobbyProps> = ({ memberId, linkTo }) => {
-  const { videoDevices, speakerDevices, microphoneDevices } = useDevices();
+  const { videoDevices, speakerDevices, microphoneDevices, error } =
+    useDevices();
 
   const [video, setVideo] = useState<DeviceId>();
   const [speakers, setSpeakers] = useState<DeviceId>();
@@ -82,30 +85,39 @@ const Lobby: React.FC<LobbyProps> = ({ memberId, linkTo }) => {
           )}
         </>
       )}
-      <div id="devices">
-        {videoDevices && (
-          <DeviceSelect
-            label={"Pick your video input"}
-            devices={videoDevices}
-            updateDeviceId={setVideo}
-          />
-        )}
-        {speakerDevices && (
-          <DeviceSelect
-            label={"Pick your audio output"}
-            devices={speakerDevices}
-            updateDeviceId={setSpeakers}
-          />
-        )}
-        {microphoneDevices && (
-          <DeviceSelect
-            label={"Pick your audio output"}
-            devices={microphoneDevices}
-            updateDeviceId={setMicrophone}
-          />
-        )}
-      </div>
-      {!isLoading && (
+
+      {!error && (
+        <div id="devices">
+          {videoDevices.length > 0 && (
+            <DeviceSelect
+              label={"Pick your video input"}
+              devices={videoDevices}
+              updateDeviceId={setVideo}
+            />
+          )}
+          {microphoneDevices.length > 0 && (
+            <DeviceSelect
+              label={"Pick your audio input"}
+              devices={microphoneDevices}
+              updateDeviceId={setMicrophone}
+            />
+          )}
+          {speakerDevices.length > 0 && (
+            <DeviceSelect
+              label={"Pick your audio output"}
+              devices={speakerDevices}
+              updateDeviceId={setSpeakers}
+            />
+          )}
+          {/* <inputs-select
+          audio-label="Audio Inputs:"
+          video-label="Video Inputs:"
+          button-text="Preview"
+        ></inputs-select> */}
+        </div>
+      )}
+
+      {!isLoading && !error && (
         <Link to={`/opentok-react/${linkTo}`}>
           <button disabled={allDevicesAvailable}>{`Go to ${linkTo}`}</button>
         </Link>
@@ -115,3 +127,14 @@ const Lobby: React.FC<LobbyProps> = ({ memberId, linkTo }) => {
 };
 
 export default Lobby;
+
+// declare global {
+//   namespace JSX {
+//     interface IntrinsicElements {
+//       "inputs-select": React.DetailedHTMLProps<
+//         React.HTMLAttributes<HTMLElement>,
+//         HTMLElement
+//       >;
+//     }
+//   }
+// }

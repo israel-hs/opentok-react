@@ -25,7 +25,7 @@ const callProperties: OT.SubscriberProperties = {
 };
 
 const Call: React.FC<CallProps> = ({ userId }) => {
-  const [value, setValue] = useState(0);
+  const [value] = useState(0);
   const screenshare = useRef<HTMLElement & { session: any; token: any }>(null);
 
   // let stream: OT.Stream | null;
@@ -169,8 +169,8 @@ const Call: React.FC<CallProps> = ({ userId }) => {
         Add Value manually
       </button> */}
       <screen-share
-        start-text="start"
-        stop-text="stop"
+        start-text="start screen share"
+        stop-text="stop screen share"
         width="300px"
         height="240px"
         ref={screenshare}

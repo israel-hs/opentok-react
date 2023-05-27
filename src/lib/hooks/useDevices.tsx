@@ -2,14 +2,16 @@ import { useEffect, useState } from "react";
 import { Devices } from "../types";
 
 const useDevices = () => {
-  const [videoDevices, setVideoDevices] = useState<Devices>();
-  const [speakerDevices, setSpeakerDevices] = useState<Devices>();
-  const [microphoneDevices, setMicrophoneDevices] = useState<Devices>();
-  //   const [error, setError] = useState<string | undefined>();
+  const [videoDevices, setVideoDevices] = useState<Devices>([]);
+  const [speakerDevices, setSpeakerDevices] = useState<Devices>([]);
+  const [microphoneDevices, setMicrophoneDevices] = useState<Devices>([]);
+  const [error, setError] = useState<string>();
 
   useEffect(() => {
     if (!navigator.mediaDevices?.enumerateDevices) {
-      console.log("enumerateDevices() not supported.");
+      const errorMessage = "enumerateDevices() not supported in this browser.";
+      setError(errorMessage);
+      console.log(errorMessage);
       return;
     }
 
@@ -31,9 +33,10 @@ const useDevices = () => {
             case "videoinput":
               video.push(device);
           }
-          // console.log(
-          //   `${device.kind}: ${device.label} id = ${device.deviceId}`
-          // );
+          // we are not retrieving any label when on Firefox, we need an alternative
+          console.log(
+            `${device.kind}: ${device.label} id = ${device.deviceId}`
+          );
         });
         setVideoDevices(video);
         setSpeakerDevices(speakers);
@@ -47,7 +50,7 @@ const useDevices = () => {
   // 'as const' makes sure that the values are constant, and not changeable
   // this affects the inferred returned type for this custom hook, see:
   // https://fettblog.eu/typescript-react-typeing-custom-hooks/
-  return { videoDevices, speakerDevices, microphoneDevices } as const;
+  return { videoDevices, speakerDevices, microphoneDevices, error } as const;
 };
 
 export default useDevices;
