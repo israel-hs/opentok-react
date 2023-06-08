@@ -1,3 +1,9 @@
+export function handleError(error?: OT.OTError) {
+  if (error) {
+    alert(error.message);
+  }
+}
+
 export function createPublisherListernerMap() {
   const eventsToListenTo = [
     "accessAllowed",

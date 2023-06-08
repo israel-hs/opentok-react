@@ -1,22 +1,17 @@
 import OT from "@opentok/client";
 
-import React, { useEffect, useState, useRef } from "react";
 import { addMember } from "../api/callApi";
-import { CallProps, StreamCreatedEvent } from "./types";
+import React, { useEffect, useState, useRef } from "react";
 import { apiKey, token, sessionId } from "../opentok.config";
+import { CallProps, SignalEvent, StreamCreatedEvent } from "./types";
 import {
   createPublisherListernerMap,
   createSessionListenersMap,
   createSubscriberListenerMap,
+  handleError,
 } from "./utils";
 
 import "@vonage/screen-share/screen-share.js";
-
-function handleError(error?: OT.OTError) {
-  if (error) {
-    alert(error.message);
-  }
-}
 
 const callProperties: OT.SubscriberProperties = {
   insertMode: "append",
@@ -24,9 +19,13 @@ const callProperties: OT.SubscriberProperties = {
   height: "100%",
 };
 
-const Call: React.FC<CallProps> = ({ userId }) => {
+const Call: React.FC<CallProps> = ({ userId, sendSignal }) => {
   const [value] = useState(0);
-  const screenshare = useRef<HTMLElement & { session: any; token: any }>(null);
+  const [signalText, setSignalText] = useState("");
+
+  const screenshare = useRef<
+    HTMLElement & { session: OT.Session; token: string }
+  >(null);
 
   // let stream: OT.Stream | null;
   let session: OT.Session;
@@ -120,6 +119,15 @@ const Call: React.FC<CallProps> = ({ userId }) => {
           ...subscriberEvents,
         });
       },
+      "signal:therapist": (event: SignalEvent) => {
+        const sender = event.data;
+        const text =
+          event.from === session.connection
+            ? "You have emitted a signal"
+            : `You have received a signal ${sender ? `from ${sender}` : ""}`;
+
+        setSignalText(text);
+      },
     });
 
     if (screenshare.current) {
@@ -162,6 +170,7 @@ const Call: React.FC<CallProps> = ({ userId }) => {
         <div id="subscriber" />
         <div id="publisher" />
       </div>
+      <div>{signalText}</div>
       {/* <button
         style={{ marginTop: "10px" }}
         onClick={() => setValue((previousValue) => previousValue + 1)}
@@ -175,6 +184,15 @@ const Call: React.FC<CallProps> = ({ userId }) => {
         height="240px"
         ref={screenshare}
       ></screen-share>
+      {sendSignal && (
+        <button
+          onClick={() => {
+            if (session) sendSignal(session);
+          }}
+        >
+          Emit Signal
+        </button>
+      )}
       {/* <button onClick={tryPublishingAgain}>Manual Publish</button> */}
     </>
   );
