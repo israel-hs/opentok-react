@@ -170,7 +170,7 @@ const Call: React.FC<CallProps> = ({ userId, sendSignal }) => {
         <div id="subscriber" />
         <div id="publisher" />
       </div>
-      <div>{signalText}</div>
+      <div style={{ marginTop: "10px" }}>{signalText}</div>
       {/* <button
         style={{ marginTop: "10px" }}
         onClick={() => setValue((previousValue) => previousValue + 1)}

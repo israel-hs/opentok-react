@@ -10,6 +10,9 @@ const Home: React.FC = () => {
       <li>
         <Link to="/opentok-react/lobby/therapist">Therapist Lobby</Link>
       </li>
+      <li>
+        <Link to="/opentok-react/onboarding">Onboarding test</Link>
+      </li>
     </ul>
   );
 };

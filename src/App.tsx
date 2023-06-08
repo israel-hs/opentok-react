@@ -5,12 +5,17 @@ import Home from "./Home";
 import Member from "./lib/Member";
 import Therapist from "./lib/Therapist";
 import GetMediaLobby from "./lib/GetMediaLobby";
+import MediaOnboardingDialog from "./lib/MediaOnboardingDialog";
 
 const memberName = "John Kennedy";
 const therapistName = "Nikita Khrushev";
 
 const App: React.FC = () => (
   <Routes>
+    <Route
+      path="/opentok-react/onboarding"
+      element={<MediaOnboardingDialog />}
+    />
     <Route path="/opentok-react" element={<Home />} />
     <Route
       path="/opentok-react/lobby/member"
