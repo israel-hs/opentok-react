@@ -21,6 +21,7 @@ const callProperties: OT.SubscriberProperties = {
 
 const Call: React.FC<CallProps> = ({ userId, sendSignal }) => {
   const [value] = useState(0);
+  const [session, setSession] = useState<OT.Session>();
   const [signalText, setSignalText] = useState("");
 
   const screenshare = useRef<
@@ -28,11 +29,11 @@ const Call: React.FC<CallProps> = ({ userId, sendSignal }) => {
   >(null);
 
   // let stream: OT.Stream | null;
-  let session: OT.Session;
-  let subscriber: OT.Subscriber;
+  // let session: OT.Session;
+  let subscriber: OT.Subscriber | undefined;
   let publisher: OT.Publisher;
 
-  const subscribeToSession = (streamToUse: OT.Stream) => {
+  const subscribeToSession = (session: OT.Session, streamToUse: OT.Stream) => {
     return session.subscribe(
       streamToUse,
       "subscriber",
@@ -89,7 +90,7 @@ const Call: React.FC<CallProps> = ({ userId, sendSignal }) => {
     //   }
     // }, 2000);
 
-    session = OT.initSession(apiKey, sessionId);
+    const session = OT.initSession(apiKey, sessionId);
 
     // Effectively connect to the session
     session.connect(token, (error) => {
@@ -112,8 +113,9 @@ const Call: React.FC<CallProps> = ({ userId, sendSignal }) => {
       streamCreated: (event: StreamCreatedEvent) => {
         // Subscribe to a newly created stream
         console.log("streamCreated", event);
-        subscriber = subscribeToSession(event.stream);
+        subscriber = subscribeToSession(session, event.stream);
 
+        if (!subscriber) return;
         const subscriberEvents = createSubscriberListenerMap();
         subscriber.on({
           ...subscriberEvents,
@@ -134,6 +136,8 @@ const Call: React.FC<CallProps> = ({ userId, sendSignal }) => {
       screenshare.current.session = session;
       screenshare.current.token = token;
     }
+
+    setSession(session);
 
     return () => {
       // clearInterval(interval);
@@ -187,6 +191,7 @@ const Call: React.FC<CallProps> = ({ userId, sendSignal }) => {
       {sendSignal && (
         <button
           onClick={() => {
+            console.log({ session });
             if (session) sendSignal(session);
           }}
         >
