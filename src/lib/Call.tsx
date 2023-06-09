@@ -1,17 +1,15 @@
 import OT from "@opentok/client";
-
 import { addMember } from "../api/callApi";
 import React, { useEffect, useState, useRef } from "react";
-import { apiKey, token, sessionId } from "../opentok.config";
-import { CallProps, SignalEvent, StreamCreatedEvent } from "./types";
+import { CallProps, StreamCreatedEvent } from "./types";
 import {
   createPublisherListernerMap,
-  createSessionListenersMap,
   createSubscriberListenerMap,
   handleError,
 } from "./utils";
 
 import "@vonage/screen-share/screen-share.js";
+import useOpentokSession from "./hooks/useOpentokSession";
 
 const callProperties: OT.SubscriberProperties = {
   insertMode: "append",
@@ -21,15 +19,13 @@ const callProperties: OT.SubscriberProperties = {
 
 const Call: React.FC<CallProps> = ({ userId, sendSignal }) => {
   const [value] = useState(0);
-  const [session, setSession] = useState<OT.Session>();
-  const [signalText, setSignalText] = useState("");
+  const { opentokSession: session, signalText } = useOpentokSession();
 
   const screenshare = useRef<
     HTMLElement & { session: OT.Session; token: string }
   >(null);
 
   // let stream: OT.Stream | null;
-  // let session: OT.Session;
   let subscriber: OT.Subscriber | undefined;
   let publisher: OT.Publisher;
 
@@ -90,20 +86,9 @@ const Call: React.FC<CallProps> = ({ userId, sendSignal }) => {
     //   }
     // }, 2000);
 
-    const session = OT.initSession(apiKey, sessionId);
-
-    // Effectively connect to the session
-    session.connect(token, (error) => {
-      console.log("session connect");
-      if (error) {
-        handleError(error);
-      }
-    });
-
-    const sessionEvents = createSessionListenersMap();
+    if (!session) return;
 
     session.on({
-      ...sessionEvents,
       // This function runs when session.connect() asynchronously completes
       sessionConnected: () => {
         console.log("on session connected");
@@ -121,23 +106,12 @@ const Call: React.FC<CallProps> = ({ userId, sendSignal }) => {
           ...subscriberEvents,
         });
       },
-      "signal:therapist": (event: SignalEvent) => {
-        const sender = event.data;
-        const text =
-          event.from === session.connection
-            ? "You have emitted a signal"
-            : `You have received a signal ${sender ? `from ${sender}` : ""}`;
-
-        setSignalText(text);
-      },
     });
 
-    if (screenshare.current) {
-      screenshare.current.session = session;
-      screenshare.current.token = token;
-    }
-
-    setSession(session);
+    // if (screenshare.current) {
+    //   screenshare.current.session = session;
+    //   screenshare.current.token = token;
+    // }
 
     return () => {
       // clearInterval(interval);
@@ -161,12 +135,8 @@ const Call: React.FC<CallProps> = ({ userId, sendSignal }) => {
         publisher.destroy();
         console.log("session unpublished the publisher, publisher destroyed");
       }
-
-      session.off(); // clean all session listeners
-      session.disconnect();
-      console.log("session disconnected");
     };
-  }, [value]);
+  }, [value, session]);
 
   return (
     <>
@@ -181,13 +151,13 @@ const Call: React.FC<CallProps> = ({ userId, sendSignal }) => {
       >
         Add Value manually
       </button> */}
-      <screen-share
+      {/* <screen-share
         start-text="start screen share"
         stop-text="stop screen share"
         width="300px"
         height="240px"
         ref={screenshare}
-      ></screen-share>
+      ></screen-share> */}
       {sendSignal && (
         <button
           onClick={() => {
