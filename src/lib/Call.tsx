@@ -1,7 +1,7 @@
 import OT from "@opentok/client";
 import { addMember } from "../api/callApi";
 import React, { useEffect, useState, useRef } from "react";
-import { CallProps, StreamCreatedEvent } from "./types";
+import { CallProps, StreamCreatedEvent, StreamDestroyedEvent } from "./types";
 import {
   createPublisherListernerMap,
   createSubscriberListenerMap,
@@ -19,7 +19,7 @@ const callProperties: OT.SubscriberProperties = {
 
 const Call: React.FC<CallProps> = ({ userId, sendSignal }) => {
   const [value] = useState(0);
-  const { opentokSession: session, signalText } = useOpentokSession();
+  const { opentokSession: session, signalText, error } = useOpentokSession();
 
   const screenshare = useRef<
     HTMLElement & { session: OT.Session; token: string }
@@ -43,27 +43,37 @@ const Call: React.FC<CallProps> = ({ userId, sendSignal }) => {
     const publisher = OT.initPublisher(
       "publisher",
       callProperties,
-      handleError
+      (error) => {
+        if (error) {
+          alert("error while initializing the publisher " + error?.message);
+        }
+      }
+      // handleError
     );
     const publisherEvents = createPublisherListernerMap();
-    publisher.on({ ...publisherEvents });
+    publisher.on({
+      ...publisherEvents,
+      streamDestroyed: (_event: StreamDestroyedEvent) => {
+        console.log("streamDestroyed @ Publisher" /*, event*/);
+        // following the docs, this should prevent the publisher from being removed from the DOM
+        // https://tokbox.com/developer/sdks/js/reference/Session.html#unpublish
+        // (not sure if this goes for the listener at the session)
+        // event.preventDefault();
+        // if (event.reason === "mediaStopped") {
+        //   // this is a screenshare stream
+        //   // remove the screenshare element
+        //   screenshare.current?.remove();
+        // }
+      },
+    });
     return publisher;
   };
 
-  // const tryPublishingAgain = () => {
-  //   if (session) {
-  //     console.log("session is not null");
-  //     if (!publisher) {
-  //       console.log("publisher is null");
-  //       publisher = createPublisher();
-  //     }
-  //     session.publish(publisher, handleError);
-  //   } else {
-  //     console.log("session is null");
-  //   }
-  // };
+  console.log("session", session);
 
   useEffect(() => {
+    if (!session) return;
+
     const addMemberToCall = async () => {
       try {
         await addMember(userId);
@@ -86,8 +96,6 @@ const Call: React.FC<CallProps> = ({ userId, sendSignal }) => {
     //   }
     // }, 2000);
 
-    if (!session) return;
-
     session.on({
       // This function runs when session.connect() asynchronously completes
       sessionConnected: () => {
@@ -106,6 +114,11 @@ const Call: React.FC<CallProps> = ({ userId, sendSignal }) => {
           ...subscriberEvents,
         });
       },
+
+      // add signal event listener here
+      // "signal:therapist": (event: OT.Session) => {
+      //   console.log("signal:therapist", event);
+      // },
     });
 
     // if (screenshare.current) {
@@ -120,7 +133,8 @@ const Call: React.FC<CallProps> = ({ userId, sendSignal }) => {
       // this is not working: this cleanup function is invoked after unmount
       // therefore screenshare.current reference is already null:
       if (screenshare.current) {
-        (screenshare.current as any).disconnectedCallback();
+        screenshare.current?.remove();
+        // (screenshare.current as any).disconnectedCallback();
       }
 
       if (subscriber) {
@@ -130,7 +144,13 @@ const Call: React.FC<CallProps> = ({ userId, sendSignal }) => {
       }
 
       if (publisher) {
-        session.unpublish(publisher);
+        // console.log("session connection", session.connection);
+        // console.log("publisher stream", publisher.stream);
+
+        // make sure to unpublish the publisher from the session only if it exists
+        if (publisher.stream) {
+          session.unpublish(publisher);
+        }
         publisher.off();
         publisher.destroy();
         console.log("session unpublished the publisher, publisher destroyed");
@@ -138,13 +158,20 @@ const Call: React.FC<CallProps> = ({ userId, sendSignal }) => {
     };
   }, [value, session]);
 
+  if (error) {
+    return <div>{error}</div>;
+  }
+
+  const canSendSignal = sendSignal && session;
+
   return (
     <>
       <div id="videos" key={value}>
         <div id="subscriber" />
         <div id="publisher" />
       </div>
-      <div style={{ marginTop: "10px" }}>{signalText}</div>
+      {signalText && <div style={{ marginTop: "10px" }}>{signalText}</div>}
+
       {/* <button
         style={{ marginTop: "10px" }}
         onClick={() => setValue((previousValue) => previousValue + 1)}
@@ -158,17 +185,16 @@ const Call: React.FC<CallProps> = ({ userId, sendSignal }) => {
         height="240px"
         ref={screenshare}
       ></screen-share> */}
-      {sendSignal && (
+      {canSendSignal && (
         <button
           onClick={() => {
-            console.log({ session });
-            if (session) sendSignal(session);
+            // console.log({ session });
+            sendSignal(session);
           }}
         >
           Emit Signal
         </button>
       )}
-      {/* <button onClick={tryPublishingAgain}>Manual Publish</button> */}
     </>
   );
 };
