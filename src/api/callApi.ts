@@ -1,4 +1,5 @@
 import { baseURL } from "../config";
+import { apiKey, sessionId, token } from "../opentok.config";
 
 export const addMember = async (memberId: string) => {
   try {
@@ -40,4 +41,18 @@ export const removeMember = async (member: string) => {
   } catch (error) {
     throw error;
   }
+};
+
+export const getOpentokCredentials = () => {
+  return new Promise<{ apiKey: string; sessionId: string; token: string }>(
+    (resolve) => {
+      setTimeout(() => {
+        resolve({
+          apiKey,
+          sessionId,
+          token,
+        });
+      }, 1500);
+    }
+  );
 };
