@@ -76,3 +76,9 @@ function createMapFor(
     {}
   );
 }
+
+export const callProperties: OT.SubscriberProperties = {
+  insertMode: "append",
+  width: "100%",
+  height: "100%",
+};

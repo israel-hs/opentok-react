@@ -21,3 +21,8 @@ export type SignalEvent = OT.Event<"signal", OT.Session> & {
   data?: string;
   from: OT.Connection | null;
 };
+
+export type StreamDestroyedEvent = OT.Event<"streamDestroyed", OT.Publisher> & {
+  stream: OT.Stream;
+  reason: string;
+};

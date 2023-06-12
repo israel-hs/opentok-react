@@ -52,7 +52,7 @@ export const getOpentokCredentials = () => {
           sessionId,
           token,
         });
-      }, 1500);
+      }, 3000);
     }
   );
 };

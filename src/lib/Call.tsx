@@ -1,21 +1,16 @@
 import OT from "@opentok/client";
 import { addMember } from "../api/callApi";
+import { CallProps, StreamCreatedEvent } from "./types";
 import React, { useEffect, useState, useRef } from "react";
-import { CallProps, StreamCreatedEvent, StreamDestroyedEvent } from "./types";
 import {
-  createPublisherListernerMap,
+  callProperties,
   createSubscriberListenerMap,
   handleError,
 } from "./utils";
 
+import Publisher from "./Publisher";
 import "@vonage/screen-share/screen-share.js";
 import useOpentokSession from "./hooks/useOpentokSession";
-
-const callProperties: OT.SubscriberProperties = {
-  insertMode: "append",
-  width: "100%",
-  height: "100%",
-};
 
 const Call: React.FC<CallProps> = ({ userId, sendSignal }) => {
   const [value] = useState(0);
@@ -27,7 +22,6 @@ const Call: React.FC<CallProps> = ({ userId, sendSignal }) => {
 
   // let stream: OT.Stream | null;
   let subscriber: OT.Subscriber | undefined;
-  let publisher: OT.Publisher;
 
   const subscribeToSession = (session: OT.Session, streamToUse: OT.Stream) => {
     return session.subscribe(
@@ -36,37 +30,6 @@ const Call: React.FC<CallProps> = ({ userId, sendSignal }) => {
       callProperties,
       handleError
     );
-  };
-
-  // Create a publisher (video & audio feed), this will create a stream
-  const createPublisher = () => {
-    const publisher = OT.initPublisher(
-      "publisher",
-      callProperties,
-      (error) => {
-        if (error) {
-          alert("error while initializing the publisher " + error?.message);
-        }
-      }
-      // handleError
-    );
-    const publisherEvents = createPublisherListernerMap();
-    publisher.on({
-      ...publisherEvents,
-      streamDestroyed: (_event: StreamDestroyedEvent) => {
-        console.log("streamDestroyed @ Publisher" /*, event*/);
-        // following the docs, this should prevent the publisher from being removed from the DOM
-        // https://tokbox.com/developer/sdks/js/reference/Session.html#unpublish
-        // (not sure if this goes for the listener at the session)
-        // event.preventDefault();
-        // if (event.reason === "mediaStopped") {
-        //   // this is a screenshare stream
-        //   // remove the screenshare element
-        //   screenshare.current?.remove();
-        // }
-      },
-    });
-    return publisher;
   };
 
   console.log("session", session);
@@ -97,12 +60,6 @@ const Call: React.FC<CallProps> = ({ userId, sendSignal }) => {
     // }, 2000);
 
     session.on({
-      // This function runs when session.connect() asynchronously completes
-      sessionConnected: () => {
-        console.log("on session connected");
-        publisher = createPublisher();
-        session.publish(publisher, handleError);
-      },
       streamCreated: (event: StreamCreatedEvent) => {
         // Subscribe to a newly created stream
         console.log("streamCreated", event);
@@ -142,19 +99,6 @@ const Call: React.FC<CallProps> = ({ userId, sendSignal }) => {
         subscriber.off();
         console.log("subscriber unsubscribed from session");
       }
-
-      if (publisher) {
-        // console.log("session connection", session.connection);
-        // console.log("publisher stream", publisher.stream);
-
-        // make sure to unpublish the publisher from the session only if it exists
-        if (publisher.stream) {
-          session.unpublish(publisher);
-        }
-        publisher.off();
-        publisher.destroy();
-        console.log("session unpublished the publisher, publisher destroyed");
-      }
     };
   }, [value, session]);
 
@@ -162,13 +106,22 @@ const Call: React.FC<CallProps> = ({ userId, sendSignal }) => {
     return <div>{error}</div>;
   }
 
+  if (!session) {
+    return (
+      <div id="videos">
+        <div id="subscriber" />
+        <div id="publisher" />
+      </div>
+    );
+  }
+
   const canSendSignal = sendSignal && session;
 
   return (
     <>
       <div id="videos" key={value}>
+        <Publisher session={session} />
         <div id="subscriber" />
-        <div id="publisher" />
       </div>
       {signalText && <div style={{ marginTop: "10px" }}>{signalText}</div>}
 
