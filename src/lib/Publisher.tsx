@@ -21,12 +21,12 @@ function createPublisher() {
   const publisherEvents = createPublisherListernerMap();
   publisher.on({
     ...publisherEvents,
-    streamDestroyed: (_event: StreamDestroyedEvent) => {
+    streamDestroyed: (event: StreamDestroyedEvent) => {
       console.log("streamDestroyed @ Publisher" /*, event*/);
       // following the docs, this should prevent the publisher from being removed from the DOM
       // https://tokbox.com/developer/sdks/js/reference/Session.html#unpublish
       // (not sure if this goes for the listener at the session)
-      // event.preventDefault();
+      event.preventDefault();
       // if (event.reason === "mediaStopped") {
       //   // this is a screenshare stream
       //   // remove the screenshare element
@@ -39,9 +39,10 @@ function createPublisher() {
 
 interface PublisherProps {
   session: OT.Session;
+  style?: React.CSSProperties;
 }
 
-const Publisher: React.FC<PublisherProps> = ({ session }) => {
+const Publisher: React.FC<PublisherProps> = ({ session, style = {} }) => {
   let publisher: OT.Publisher;
 
   useEffect(() => {
@@ -70,7 +71,7 @@ const Publisher: React.FC<PublisherProps> = ({ session }) => {
     };
   }, [session]);
 
-  return <div id="publisher" />;
+  return <div id="publisher" style={style} />;
 };
 
 export default Publisher;

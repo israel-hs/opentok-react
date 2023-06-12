@@ -11,6 +11,7 @@ import {
 import Publisher from "./Publisher";
 import "@vonage/screen-share/screen-share.js";
 import useOpentokSession from "./hooks/useOpentokSession";
+import { styled } from "styled-components";
 
 const Call: React.FC<CallProps> = ({ userId, sendSignal }) => {
   const [value] = useState(0);
@@ -153,6 +154,19 @@ const Call: React.FC<CallProps> = ({ userId, sendSignal }) => {
 };
 
 export default Call;
+
+// const StyledPublisher = styled(Publisher)`
+//   .publisher {
+//     position: absolute;
+//     width: 150px;
+//     height: 250px;
+//     top: 15px;
+//     left: 15px;
+//     z-index: 100;
+//     border: 3px solid white;
+//     border-radius: 3px;
+//   }
+// `;
 
 declare global {
   namespace JSX {

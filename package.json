@@ -15,9 +15,9 @@
   "dependencies": {
     "@emotion/react": "^11.4.1",
     "@emotion/styled": "^11.3.0",
-    "@opentok/client": "^2.25.1",
     "@mui/icons-material": "^5.0.0",
     "@mui/material": "^5.0.0",
+    "@opentok/client": "^2.25.1",
     "@vonage/inputs-select": "^0.0.3",
     "@vonage/screen-share": "^0.0.3",
     "@vonage/video-publisher": "^0.0.6",
@@ -25,7 +25,8 @@
     "mic-check": "^1.1.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.10.0"
+    "react-router-dom": "^6.10.0",
+    "styled-components": "^6.0.0-rc.3"
   },
   "devDependencies": {
     "@types/opentok": "^2.14.0",

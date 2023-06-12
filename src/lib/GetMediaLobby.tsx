@@ -1,10 +1,14 @@
 import { Link } from "react-router-dom";
 import React, { useEffect, useState } from "react";
 
+import Publisher from "./Publisher";
 import DeviceSelect from "./DeviceSelect";
 import useDevices from "./hooks/useDevices";
 import type { Member, Members } from "./types";
+import useOpentokSession from "./hooks/useOpentokSession";
 import { getMembers, removeMember } from "../api/callApi";
+
+import styled from "styled-components";
 
 import "./devices.css";
 
@@ -25,6 +29,9 @@ interface LobbyProps {
 
 type DeviceId = MediaDeviceInfo["deviceId"];
 
+// create a new react component that allows the styles attribute to be passed in
+// const StyledPublisher = styled(Publisher)<{ styles?: React.CSSProperties }>`
+
 const Lobby: React.FC<LobbyProps> = ({ memberId, linkTo }) => {
   const { videoDevices, speakerDevices, microphoneDevices, error } =
     useDevices();
@@ -36,8 +43,12 @@ const Lobby: React.FC<LobbyProps> = ({ memberId, linkTo }) => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [connectedMembers, setConnectedMembers] = useState<Member[]>([]);
 
+  const { opentokSession: session, error: sessionError } = useOpentokSession();
+
   useEffect(() => {
-    setIsLoading(true);
+    if (!session) return;
+    // setIsLoading(true);
+
     let interval: number;
     const removeMemberAndPoll = async () => {
       // first make sure that a member that is in the lobby doesn't exist in a call
@@ -61,13 +72,21 @@ const Lobby: React.FC<LobbyProps> = ({ memberId, linkTo }) => {
     return () => {
       clearInterval(interval);
     };
-  }, []);
+  }, [session]);
 
   const membersList = connectedMembers.map((member) => (
     <li key={member}>{member}</li>
   ));
 
   const allDevicesAvailable = !!video && !!speakers && !!microphone;
+
+  if (sessionError) {
+    return (
+      <div>
+        There was an error connecting to the session. Please try again later.
+      </div>
+    );
+  }
 
   return (
     <>
@@ -86,34 +105,45 @@ const Lobby: React.FC<LobbyProps> = ({ memberId, linkTo }) => {
         </>
       )}
 
-      {!error && (
-        <div id="devices">
-          {videoDevices.length > 0 && (
-            <DeviceSelect
-              label={"Pick your video input"}
-              devices={videoDevices}
-              updateDeviceId={setVideo}
-            />
-          )}
-          {microphoneDevices.length > 0 && (
-            <DeviceSelect
-              label={"Pick your audio input"}
-              devices={microphoneDevices}
-              updateDeviceId={setMicrophone}
-            />
-          )}
-          {speakerDevices.length > 0 && (
-            <DeviceSelect
-              label={"Pick your audio output"}
-              devices={speakerDevices}
-              updateDeviceId={setSpeakers}
-            />
-          )}
-          {/* <inputs-select
+      {!error && session && (
+        // display the contents of this div using flex column
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "flex-start",
+          }}
+        >
+          {/* <StyledPublisher session={session} /> */}
+          <Publisher session={session} style={{ position: "unset" }} />
+          <div id="devices">
+            {videoDevices.length > 0 && (
+              <DeviceSelect
+                label={"Pick your video input"}
+                devices={videoDevices}
+                updateDeviceId={setVideo}
+              />
+            )}
+            {microphoneDevices.length > 0 && (
+              <DeviceSelect
+                label={"Pick your audio input"}
+                devices={microphoneDevices}
+                updateDeviceId={setMicrophone}
+              />
+            )}
+            {speakerDevices.length > 0 && (
+              <DeviceSelect
+                label={"Pick your audio output"}
+                devices={speakerDevices}
+                updateDeviceId={setSpeakers}
+              />
+            )}
+            {/* <inputs-select
           audio-label="Audio Inputs:"
           video-label="Video Inputs:"
           button-text="Preview"
         ></inputs-select> */}
+          </div>
         </div>
       )}
 
@@ -127,6 +157,12 @@ const Lobby: React.FC<LobbyProps> = ({ memberId, linkTo }) => {
 };
 
 export default Lobby;
+
+// wrap Publisher component in a styled component and specify a width and height
+// const StyledPublisher = styled(Publisher)`
+//   width: 150px;
+//   height: 250px;
+// `;
 
 // declare global {
 //   namespace JSX {
