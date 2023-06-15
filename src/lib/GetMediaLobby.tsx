@@ -6,9 +6,9 @@ import DeviceSelect from "./DeviceSelect";
 import useDevices from "./hooks/useDevices";
 import type { Member, Members } from "./types";
 import useOpentokSession from "./hooks/useOpentokSession";
-import { getMembers, removeMember } from "../api/callApi";
+// import { getMembers, removeMember } from "../api/callApi";
 
-import styled from "styled-components";
+// import styled from "styled-components";
 
 import "./devices.css";
 
@@ -40,39 +40,36 @@ const Lobby: React.FC<LobbyProps> = ({ memberId, linkTo }) => {
   const [speakers, setSpeakers] = useState<DeviceId>();
   const [microphone, setMicrophone] = useState<DeviceId>();
 
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  // const [isLoading, setIsLoading] = useState<boolean>(true);
   const [connectedMembers, setConnectedMembers] = useState<Member[]>([]);
 
   const { opentokSession: session, error: sessionError } = useOpentokSession();
 
-  useEffect(() => {
-    if (!session) return;
-    // setIsLoading(true);
+  // useEffect(() => {
+  //   if (!session) return;
+  //   // setIsLoading(true);
 
-    let interval: number;
-    const removeMemberAndPoll = async () => {
-      // first make sure that a member that is in the lobby doesn't exist in a call
-      await removeMember(memberId);
+  //   let interval: number;
+  //   const poll = async () => {
+  //     // poll data from the server every 2 secs
+  //     interval = setInterval(async () => {
+  //       try {
+  //         const { members }: Members = await getMembers();
+  //         setConnectedMembers(members);
+  //         setIsLoading(false);
+  //         // console.log("members", members);
+  //       } catch (error) {
+  //         console.error(error);
+  //       }
+  //     }, 2000);
+  //   };
 
-      // poll data from the server every 2 secs
-      interval = setInterval(async () => {
-        try {
-          const { members }: Members = await getMembers();
-          setConnectedMembers(members);
-          setIsLoading(false);
-          // console.log("members", members);
-        } catch (error) {
-          console.error(error);
-        }
-      }, 2000);
-    };
+  //   poll();
 
-    removeMemberAndPoll();
-
-    return () => {
-      clearInterval(interval);
-    };
-  }, [session]);
+  //   return () => {
+  //     clearInterval(interval);
+  //   };
+  // }, [session]);
 
   const membersList = connectedMembers.map((member) => (
     <li key={member}>{member}</li>
@@ -90,19 +87,13 @@ const Lobby: React.FC<LobbyProps> = ({ memberId, linkTo }) => {
 
   return (
     <>
-      {isLoading ? (
-        <div>Loading data...</div>
+      {connectedMembers.length ? (
+        <div>
+          The following members are already in the call:
+          <ul>{membersList}</ul>
+        </div>
       ) : (
-        <>
-          {connectedMembers.length ? (
-            <div>
-              The following members are already in the call:
-              <ul>{membersList}</ul>
-            </div>
-          ) : (
-            <div>There are no connected members</div>
-          )}
-        </>
+        <div>There are no connected members</div>
       )}
 
       {!error && session && (
@@ -147,7 +138,7 @@ const Lobby: React.FC<LobbyProps> = ({ memberId, linkTo }) => {
         </div>
       )}
 
-      {!isLoading && !error && (
+      {!error && (
         <Link to={`/opentok-react/${linkTo}`}>
           <button disabled={allDevicesAvailable}>{`Go to ${linkTo}`}</button>
         </Link>
