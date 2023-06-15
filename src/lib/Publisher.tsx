@@ -39,10 +39,15 @@ function createPublisher() {
 
 interface PublisherProps {
   session: OT.Session;
+  publishToSession?: boolean;
   style?: React.CSSProperties;
 }
 
-const Publisher: React.FC<PublisherProps> = ({ session, style = {} }) => {
+const Publisher: React.FC<PublisherProps> = ({
+  session,
+  publishToSession = true,
+  style = {},
+}) => {
   let publisher: OT.Publisher;
 
   useEffect(() => {
@@ -53,7 +58,12 @@ const Publisher: React.FC<PublisherProps> = ({ session, style = {} }) => {
       sessionConnected: () => {
         console.log("on session connected");
         publisher = createPublisher();
-        session.publish(publisher, handleError);
+
+        // We want to control whethe we make the stream available to the session or not
+        // (we don't weant to publish when we are at the Lobby for example)
+        if (publishToSession) {
+          session.publish(publisher, handleError);
+        }
       },
     });
 

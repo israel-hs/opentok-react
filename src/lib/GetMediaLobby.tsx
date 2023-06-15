@@ -106,7 +106,11 @@ const Lobby: React.FC<LobbyProps> = ({ memberId, linkTo }) => {
           }}
         >
           {/* <StyledPublisher session={session} /> */}
-          <Publisher session={session} style={{ position: "unset" }} />
+          <Publisher
+            session={session}
+            publishToSession={false}
+            style={{ position: "unset" }}
+          />
           <div id="devices">
             {videoDevices.length > 0 && (
               <DeviceSelect
