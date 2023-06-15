@@ -1,17 +1,13 @@
 import OT from "@opentok/client";
+import { CallProps } from "./types";
 import { addMember } from "../api/callApi";
-import { CallProps, StreamCreatedEvent } from "./types";
 import React, { useEffect, useState, useRef } from "react";
-import {
-  callProperties,
-  createSubscriberListenerMap,
-  handleError,
-} from "./utils";
 
 import Publisher from "./Publisher";
+import Subscriber from "./Subscriber";
 import "@vonage/screen-share/screen-share.js";
 import useOpentokSession from "./hooks/useOpentokSession";
-import { styled } from "styled-components";
+// import { styled } from "styled-components";
 
 const Call: React.FC<CallProps> = ({ userId, sendSignal }) => {
   const [value] = useState(0);
@@ -22,17 +18,6 @@ const Call: React.FC<CallProps> = ({ userId, sendSignal }) => {
   >(null);
 
   // let stream: OT.Stream | null;
-  let subscriber: OT.Subscriber | undefined;
-
-  const subscribeToSession = (session: OT.Session, streamToUse: OT.Stream) => {
-    return session.subscribe(
-      streamToUse,
-      "subscriber",
-      callProperties,
-      handleError
-    );
-  };
-
   console.log("session", session);
 
   useEffect(() => {
@@ -61,18 +46,6 @@ const Call: React.FC<CallProps> = ({ userId, sendSignal }) => {
     // }, 2000);
 
     session.on({
-      streamCreated: (event: StreamCreatedEvent) => {
-        // Subscribe to a newly created stream
-        console.log("streamCreated", event);
-        subscriber = subscribeToSession(session, event.stream);
-
-        if (!subscriber) return;
-        const subscriberEvents = createSubscriberListenerMap();
-        subscriber.on({
-          ...subscriberEvents,
-        });
-      },
-
       // add signal event listener here
       // "signal:therapist": (event: OT.Session) => {
       //   console.log("signal:therapist", event);
@@ -93,12 +66,6 @@ const Call: React.FC<CallProps> = ({ userId, sendSignal }) => {
       if (screenshare.current) {
         screenshare.current?.remove();
         // (screenshare.current as any).disconnectedCallback();
-      }
-
-      if (subscriber) {
-        session.unsubscribe(subscriber);
-        subscriber.off();
-        console.log("subscriber unsubscribed from session");
       }
     };
   }, [value, session]);
@@ -122,7 +89,7 @@ const Call: React.FC<CallProps> = ({ userId, sendSignal }) => {
     <>
       <div id="videos" key={value}>
         <Publisher session={session} />
-        <div id="subscriber" />
+        <Subscriber session={session} />
       </div>
       {signalText && <div style={{ marginTop: "10px" }}>{signalText}</div>}
 
