@@ -1,16 +1,21 @@
 import React, { useEffect } from "react";
 import { StreamDestroyedEvent } from "./types";
 import {
-  callProperties,
   createPublisherListernerMap,
   handleError,
+  publisherProperties,
 } from "./utils";
 
 // Create a publisher (video & audio feed), this will create a stream
-function createPublisher() {
+function createPublisher(audioSource: string, videoSource: string) {
+  const publisherProps: OT.PublisherProperties = {
+    ...publisherProperties,
+    audioSource,
+    videoSource,
+  };
   const publisher = OT.initPublisher(
     "publisher",
-    callProperties,
+    publisherProps,
     (error) => {
       if (error) {
         alert("error while initializing the publisher " + error?.message);
@@ -39,12 +44,16 @@ function createPublisher() {
 
 interface PublisherProps {
   session: OT.Session;
+  audioSource: string;
+  videoSource: string;
   publishToSession?: boolean;
   style?: React.CSSProperties;
 }
 
 const Publisher: React.FC<PublisherProps> = ({
   session,
+  audioSource,
+  videoSource,
   publishToSession = true,
   style = {},
 }) => {
@@ -57,7 +66,7 @@ const Publisher: React.FC<PublisherProps> = ({
       // This function runs when session.connect() asynchronously completes
       sessionConnected: () => {
         console.log("on session connected");
-        publisher = createPublisher();
+        publisher = createPublisher(audioSource, videoSource);
 
         // We want to control whethe we make the stream available to the session or not
         // (we don't weant to publish when we are at the Lobby for example)

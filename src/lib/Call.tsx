@@ -7,11 +7,17 @@ import Publisher from "./Publisher";
 import Subscriber from "./Subscriber";
 import "@vonage/screen-share/screen-share.js";
 import useOpentokSession from "./hooks/useOpentokSession";
+import { useLocation } from "react-router-dom";
 // import { styled } from "styled-components";
 
 const Call: React.FC<CallProps> = ({ userId, sendSignal }) => {
   const [value] = useState(0);
+  const location = useLocation();
+
+  const { videoDeviceId, microphoneDeviceId } = location.state?.data || {};
   const { opentokSession: session, signalText, error } = useOpentokSession();
+
+  console.log({ videoDeviceId, microphoneDeviceId });
 
   const screenshare = useRef<
     HTMLElement & { session: OT.Session; token: string }
@@ -88,7 +94,11 @@ const Call: React.FC<CallProps> = ({ userId, sendSignal }) => {
   return (
     <>
       <div id="videos" key={value}>
-        <Publisher session={session} />
+        <Publisher
+          session={session}
+          videoSource={videoDeviceId}
+          audioSource={microphoneDeviceId}
+        />
         <Subscriber session={session} />
       </div>
       {signalText && <div style={{ marginTop: "10px" }}>{signalText}</div>}

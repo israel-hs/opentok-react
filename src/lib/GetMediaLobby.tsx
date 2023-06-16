@@ -2,9 +2,9 @@ import { Link } from "react-router-dom";
 import React, { useEffect, useState } from "react";
 
 import Publisher from "./Publisher";
+import type { Member } from "./types";
 import DeviceSelect from "./DeviceSelect";
 import useDevices from "./hooks/useDevices";
-import type { Member, Members } from "./types";
 import useOpentokSession from "./hooks/useOpentokSession";
 // import { getMembers, removeMember } from "../api/callApi";
 
@@ -32,16 +32,15 @@ type DeviceId = MediaDeviceInfo["deviceId"];
 // create a new react component that allows the styles attribute to be passed in
 // const StyledPublisher = styled(Publisher)<{ styles?: React.CSSProperties }>`
 
-const Lobby: React.FC<LobbyProps> = ({ memberId, linkTo }) => {
-  const { videoDevices, speakerDevices, microphoneDevices, error } =
-    useDevices();
+const Lobby: React.FC<LobbyProps> = ({ /*memberId,*/ linkTo }) => {
+  const { videoDevices, microphoneDevices, error } = useDevices();
 
   const [video, setVideo] = useState<DeviceId>();
-  const [speakers, setSpeakers] = useState<DeviceId>();
+  // const [speakers, setSpeakers] = useState<DeviceId>();
   const [microphone, setMicrophone] = useState<DeviceId>();
 
   // const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [connectedMembers, setConnectedMembers] = useState<Member[]>([]);
+  const [connectedMembers /*, setConnectedMembers*/] = useState<Member[]>([]);
 
   const { opentokSession: session, error: sessionError } = useOpentokSession();
 
@@ -71,11 +70,18 @@ const Lobby: React.FC<LobbyProps> = ({ memberId, linkTo }) => {
   //   };
   // }, [session]);
 
+  useEffect(() => {
+    if (!videoDevices.length || !microphoneDevices.length) return;
+
+    setVideo(videoDevices[0].deviceId);
+    setMicrophone(microphoneDevices[0].deviceId);
+  }, [videoDevices, microphoneDevices]);
+
   const membersList = connectedMembers.map((member) => (
     <li key={member}>{member}</li>
   ));
 
-  const allDevicesAvailable = !!video && !!speakers && !!microphone;
+  const allDevicesAvailable = !!video && /*!!speakers &&*/ !!microphone;
 
   if (sessionError) {
     return (
@@ -83,6 +89,14 @@ const Lobby: React.FC<LobbyProps> = ({ memberId, linkTo }) => {
         There was an error connecting to the session. Please try again later.
       </div>
     );
+  }
+
+  console.log("video", video);
+  console.log("microphone", microphone);
+  console.log("allDevicesAvailable", allDevicesAvailable);
+
+  if (!video || !microphone) {
+    return <div>Loading devices...</div>;
   }
 
   return (
@@ -105,10 +119,11 @@ const Lobby: React.FC<LobbyProps> = ({ memberId, linkTo }) => {
             alignItems: "flex-start",
           }}
         >
-          {/* <StyledPublisher session={session} /> */}
           <Publisher
             session={session}
             publishToSession={false}
+            audioSource={microphone}
+            videoSource={video}
             style={{ position: "unset" }}
           />
           <div id="devices">
@@ -126,25 +141,30 @@ const Lobby: React.FC<LobbyProps> = ({ memberId, linkTo }) => {
                 updateDeviceId={setMicrophone}
               />
             )}
-            {speakerDevices.length > 0 && (
+            {/* {speakerDevices.length > 0 && (
               <DeviceSelect
                 label={"Pick your audio output"}
                 devices={speakerDevices}
                 updateDeviceId={setSpeakers}
               />
-            )}
+            )} */}
             {/* <inputs-select
-          audio-label="Audio Inputs:"
-          video-label="Video Inputs:"
-          button-text="Preview"
-        ></inputs-select> */}
+              audio-label="Audio Inputs:"
+              video-label="Video Inputs:"
+              button-text="Preview"
+            ></inputs-select> */}
           </div>
         </div>
       )}
 
-      {!error && (
-        <Link to={`/opentok-react/${linkTo}`}>
-          <button disabled={allDevicesAvailable}>{`Go to ${linkTo}`}</button>
+      {!error && !!video && !!microphone && (
+        <Link
+          to={`/opentok-react/${linkTo}`}
+          state={{
+            data: { videoDeviceId: video, microphoneDeviceId: microphone },
+          }}
+        >
+          <button disabled={!allDevicesAvailable}>{`Go to ${linkTo}`}</button>
         </Link>
       )}
     </>
