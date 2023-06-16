@@ -76,3 +76,26 @@ function createMapFor(
     {}
   );
 }
+
+export const callProperties: OT.SubscriberProperties = {
+  insertMode: "append",
+  width: "100%",
+  height: "100%",
+};
+
+export const publisherProperties: OT.PublisherProperties = {
+  audioSource: null,
+  videoSource: null,
+  insertMode: "append",
+  width: "100%",
+  height: "100%",
+  showControls: true,
+  // publishAudio: true,
+  // publishVideo: true,
+  // resolution: "1280x720",
+  // frameRate: 30,
+  // name: "publisher",
+  // style: {
+  //   nameDisplayMode: "off",
+  // },
+};

@@ -1,5 +1,4 @@
 import { baseURL } from "../config";
-import { apiKey, sessionId, token } from "../opentok.config";
 
 export const addMember = async (memberId: string) => {
   try {
@@ -43,16 +42,21 @@ export const removeMember = async (member: string) => {
   }
 };
 
-export const getOpentokCredentials = () => {
-  return new Promise<{ apiKey: string; sessionId: string; token: string }>(
-    (resolve) => {
-      setTimeout(() => {
-        resolve({
-          apiKey,
-          sessionId,
-          token,
-        });
-      }, 1500);
-    }
-  );
+export const getOpentokCredentials = async (
+  roomId: number,
+  signal: AbortSignal
+): Promise<{ openTokSessionId: string; openTokAccessToken: string }> => {
+  try {
+    const response = await fetch(`${baseURL}/call-v2/room/${roomId}`, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+      signal,
+    });
+
+    if (!response.ok) throw Error("error while retrieving opentok credentials");
+    return response.json();
+  } catch (error) {
+    throw error;
+  }
 };
