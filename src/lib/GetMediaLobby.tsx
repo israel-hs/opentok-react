@@ -37,6 +37,11 @@ const Lobby: React.FC<LobbyProps> = ({ memberId, linkTo }) => {
   const [connectedMembers, setConnectedMembers] = useState<Member[]>([]);
 
   useEffect(() => {
+    if (!videoDevices.length) return;
+    setVideo(videoDevices[0].deviceId);
+  }, [videoDevices]);
+
+  useEffect(() => {
     setIsLoading(true);
     let interval: number;
     const removeMemberAndPoll = async () => {
@@ -118,7 +123,7 @@ const Lobby: React.FC<LobbyProps> = ({ memberId, linkTo }) => {
       )}
 
       {!isLoading && !error && (
-        <Link to={`/opentok-react/${linkTo}`}>
+        <Link to={`/opentok-react/${linkTo}`} state={{ video }}>
           <button disabled={allDevicesAvailable}>{`Go to ${linkTo}`}</button>
         </Link>
       )}

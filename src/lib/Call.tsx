@@ -12,6 +12,7 @@ import {
 } from "./utils";
 
 import "@vonage/screen-share/screen-share.js";
+import { useLocation } from "react-router-dom";
 
 const callProperties: OT.SubscriberProperties = {
   insertMode: "append",
@@ -20,6 +21,7 @@ const callProperties: OT.SubscriberProperties = {
 };
 
 const Call: React.FC<CallProps> = ({ userId, sendSignal }) => {
+  const location = useLocation();
   const [value] = useState(0);
   const [session, setSession] = useState<OT.Session>();
   const [signalText, setSignalText] = useState("");
@@ -32,6 +34,9 @@ const Call: React.FC<CallProps> = ({ userId, sendSignal }) => {
   // let session: OT.Session;
   let subscriber: OT.Subscriber | undefined;
   let publisher: OT.Publisher;
+
+  const video = location.state.video;
+  console.log("video", video);
 
   const subscribeToSession = (session: OT.Session, streamToUse: OT.Stream) => {
     return session.subscribe(
@@ -46,7 +51,7 @@ const Call: React.FC<CallProps> = ({ userId, sendSignal }) => {
   const createPublisher = () => {
     const publisher = OT.initPublisher(
       "publisher",
-      callProperties,
+      { ...callProperties, videoSource: video },
       handleError
     );
     const publisherEvents = createPublisherListernerMap();
