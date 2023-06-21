@@ -6,13 +6,12 @@ import type { Member } from "./types";
 import DeviceSelect from "./DeviceSelect";
 import useDevices from "./hooks/useDevices";
 import useOpentokSession from "./hooks/useOpentokSession";
-// import { getMembers, removeMember } from "../api/callApi";
 
 // import styled from "styled-components";
 
 import "./devices.css";
 
-// import "@vonage/inputs-select/inputs-select.js";
+import "@vonage/inputs-select/inputs-select.js";
 
 /**
  * This component is meant to wrap a Video component and initially
@@ -33,16 +32,23 @@ type DeviceId = MediaDeviceInfo["deviceId"];
 // const StyledPublisher = styled(Publisher)<{ styles?: React.CSSProperties }>`
 
 const Lobby: React.FC<LobbyProps> = ({ /*memberId,*/ linkTo }) => {
-  const { videoDevices, microphoneDevices, error } = useDevices();
+  // const [value, _setValue] = useState(0);
+  const { videoDevices, microphoneDevices /*,error*/ } = useDevices();
 
   const [video, setVideo] = useState<DeviceId>();
   // const [speakers, setSpeakers] = useState<DeviceId>();
   const [microphone, setMicrophone] = useState<DeviceId>();
 
   // const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [connectedMembers /*, setConnectedMembers*/] = useState<Member[]>([]);
+  // const [connectedMembers /*, setConnectedMembers*/] = useState<Member[]>([]);
 
   const { opentokSession: session, error: sessionError } = useOpentokSession();
+
+  useEffect(() => {
+    if (!videoDevices.length || !microphoneDevices.length) return;
+    setVideo(videoDevices[0].deviceId);
+    setMicrophone(microphoneDevices[0].deviceId);
+  }, [videoDevices, microphoneDevices]);
 
   // useEffect(() => {
   //   if (!session) return;
@@ -70,18 +76,32 @@ const Lobby: React.FC<LobbyProps> = ({ /*memberId,*/ linkTo }) => {
   //   };
   // }, [session]);
 
-  useEffect(() => {
-    if (!videoDevices.length || !microphoneDevices.length) return;
+  // useEffect(() => {
+  //   // if (!videoDevices.length || !microphoneDevices.length) return;
 
-    setVideo(videoDevices[0].deviceId);
-    setMicrophone(microphoneDevices[0].deviceId);
-  }, [videoDevices, microphoneDevices]);
+  //   // setVideo(videoDevices[0].deviceId);
+  //   // setMicrophone(microphoneDevices[0].deviceId);
 
-  const membersList = connectedMembers.map((member) => (
-    <li key={member}>{member}</li>
-  ));
+  //   window.addEventListener("inputsSelected", (options: any) => {
+  //     console.log("video input selected", options.detail.videoSource);
+  //     console.log("audio input selected", options.detail.audioSource);
+  //     setVideo(options.detail.videoSource);
+  //     setMicrophone(options.detail.audioSource);
+  //   });
 
-  const allDevicesAvailable = !!video && /*!!speakers &&*/ !!microphone;
+  //   return () => {
+  //     window.removeEventListener("inputsSelected", (options) => {
+  //       console.log("inputsSelected removed", options);
+  //     });
+  //   };
+  // }, []);
+  //}, [videoDevices, microphoneDevices]);
+
+  // const membersList = connectedMembers.map((member) => (
+  //   <li key={member}>{member}</li>
+  // ));
+
+  const allDevicesAvailable = !!video && !!microphone; // && !!speakers
 
   if (sessionError) {
     return (
@@ -91,27 +111,31 @@ const Lobby: React.FC<LobbyProps> = ({ /*memberId,*/ linkTo }) => {
     );
   }
 
-  console.log("video", video);
-  console.log("microphone", microphone);
+  // console.log("video", video);
+  // console.log("microphone", microphone);
   console.log("allDevicesAvailable", allDevicesAvailable);
 
-  if (!video || !microphone) {
-    return <div>Loading devices...</div>;
+  if (!session || !allDevicesAvailable) {
+    return <div id="publisher" />;
   }
+
+  // if (!video || !microphone) {
+  //   return <div>Loading devices...</div>;
+  // }
 
   return (
     <>
-      {connectedMembers.length ? (
+      {/* {connectedMembers.length ? (
         <div>
           The following members are already in the call:
           <ul>{membersList}</ul>
         </div>
       ) : (
         <div>There are no connected members</div>
-      )}
+      )} */}
 
-      {!error && session && (
-        // display the contents of this div using flex column
+      {
+        /*!error &&*/ // display the contents of this div using flex column
         <div
           style={{
             display: "flex",
@@ -120,6 +144,7 @@ const Lobby: React.FC<LobbyProps> = ({ /*memberId,*/ linkTo }) => {
           }}
         >
           <Publisher
+            // key={value}
             session={session}
             publishToSession={false}
             audioSource={microphone}
@@ -151,22 +176,28 @@ const Lobby: React.FC<LobbyProps> = ({ /*memberId,*/ linkTo }) => {
             {/* <inputs-select
               audio-label="Audio Inputs:"
               video-label="Video Inputs:"
-              button-text="Preview"
+              button-text="Update selection"
             ></inputs-select> */}
+            {/* <button
+              onClick={() => {
+                setValue((value) => value + 1);
+              }}
+            >
+              Update component
+            </button> */}
           </div>
+          <Link
+            to={`/opentok-react/${linkTo}`}
+            state={{
+              videoDeviceId: video,
+              microphoneDeviceId: microphone,
+            }}
+          >
+            <button /*disabled={!allDevicesAvailable}*/
+            >{`Go to ${linkTo}`}</button>
+          </Link>
         </div>
-      )}
-
-      {!error && !!video && !!microphone && (
-        <Link
-          to={`/opentok-react/${linkTo}`}
-          state={{
-            data: { videoDeviceId: video, microphoneDeviceId: microphone },
-          }}
-        >
-          <button disabled={!allDevicesAvailable}>{`Go to ${linkTo}`}</button>
-        </Link>
-      )}
+      }
     </>
   );
 };
@@ -179,13 +210,13 @@ export default Lobby;
 //   height: 250px;
 // `;
 
-// declare global {
-//   namespace JSX {
-//     interface IntrinsicElements {
-//       "inputs-select": React.DetailedHTMLProps<
-//         React.HTMLAttributes<HTMLElement>,
-//         HTMLElement
-//       >;
-//     }
-//   }
-// }
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      "inputs-select": React.DetailedHTMLProps<
+        React.HTMLAttributes<HTMLElement>,
+        HTMLElement
+      >;
+    }
+  }
+}

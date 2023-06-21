@@ -34,9 +34,9 @@ const useDevices = () => {
               video.push(device);
           }
           // we are not retrieving any label when on Firefox, we need an alternative
-          console.log(
-            `${device.kind}: ${device.label} id = ${device.deviceId}`
-          );
+          // console.log(
+          //   `${device.kind}: ${device.label} id = ${device.deviceId}`
+          // );
         });
         setVideoDevices(video);
         setSpeakerDevices(speakers);

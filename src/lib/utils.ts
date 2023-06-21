@@ -84,8 +84,6 @@ export const callProperties: OT.SubscriberProperties = {
 };
 
 export const publisherProperties: OT.PublisherProperties = {
-  audioSource: null,
-  videoSource: null,
   insertMode: "append",
   width: "100%",
   height: "100%",

@@ -26,7 +26,6 @@ const useOpentokSession = () => {
         console.log("session component is mounted");
         session = OT.initSession(apiKey, sessionId);
 
-        // Effectively connect to the session
         session.connect(token, handleError);
 
         const sessionEvents = createSessionListenersMap();

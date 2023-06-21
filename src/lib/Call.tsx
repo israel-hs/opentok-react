@@ -1,7 +1,7 @@
 import OT from "@opentok/client";
 import { CallProps } from "./types";
 import { addMember } from "../api/callApi";
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 
 import Publisher from "./Publisher";
 import Subscriber from "./Subscriber";
@@ -11,10 +11,9 @@ import { useLocation } from "react-router-dom";
 // import { styled } from "styled-components";
 
 const Call: React.FC<CallProps> = ({ userId, sendSignal }) => {
-  const [value] = useState(0);
   const location = useLocation();
 
-  const { videoDeviceId, microphoneDeviceId } = location.state?.data || {};
+  const { videoDeviceId, microphoneDeviceId } = location.state || {};
   const { opentokSession: session, signalText, error } = useOpentokSession();
 
   console.log({ videoDeviceId, microphoneDeviceId });
@@ -74,7 +73,7 @@ const Call: React.FC<CallProps> = ({ userId, sendSignal }) => {
         // (screenshare.current as any).disconnectedCallback();
       }
     };
-  }, [value, session]);
+  }, [session]);
 
   if (error) {
     return <div>{error}</div>;
@@ -93,7 +92,7 @@ const Call: React.FC<CallProps> = ({ userId, sendSignal }) => {
 
   return (
     <>
-      <div id="videos" key={value}>
+      <div id="videos">
         <Publisher
           session={session}
           videoSource={videoDeviceId}
@@ -102,13 +101,6 @@ const Call: React.FC<CallProps> = ({ userId, sendSignal }) => {
         <Subscriber session={session} />
       </div>
       {signalText && <div style={{ marginTop: "10px" }}>{signalText}</div>}
-
-      {/* <button
-        style={{ marginTop: "10px" }}
-        onClick={() => setValue((previousValue) => previousValue + 1)}
-      >
-        Add Value manually
-      </button> */}
       {/* <screen-share
         start-text="start screen share"
         stop-text="stop screen share"
