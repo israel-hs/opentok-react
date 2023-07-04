@@ -6,21 +6,12 @@ import {
   publisherProperties,
 } from "./utils";
 
-// function displayDevices() {
-//   window.navigator.mediaDevices
-//     .getUserMedia({ video: true, audio: true })
-//     .then((mediaStream) => {
-//       console.log("mediaStream stop tracks", mediaStream.getAudioTracks());
-//       // mediaStream.getTracks().forEach((track) => track.stop());
-//     });
-// }
-
 // Create a publisher (video & audio feed), this will create a stream
 function createPublisher(
   audioSource: PublisherProps["audioSource"],
   videoSource: PublisherProps["videoSource"]
 ) {
-  let publisherProps: OT.PublisherProperties = {
+  const publisherProps: OT.PublisherProperties = {
     ...publisherProperties,
     videoSource,
     audioSource,
@@ -41,8 +32,8 @@ function createPublisher(
   publisher.on({
     ...publisherEvents,
     streamDestroyed: (event: StreamDestroyedEvent) => {
-      console.log("streamDestroyed @ Publisher" /*, event*/);
-      // following the docs, this should prevent the publisher from being removed from the DOM
+      console.log("streamDestroyed @ Publisher, reason:", event.reason);
+      // this should prevent the publisher from being removed from the DOM
       // https://tokbox.com/developer/sdks/js/reference/Session.html#unpublish
       // (not sure if this goes for the listener at the session)
       event.preventDefault();
@@ -57,10 +48,16 @@ function createPublisher(
 }
 
 function setVideoSource(publisher: OT.Publisher, videoSource: string) {
+  // console.log("publisher getVideoSource:", publisher.getVideoSource());
+  // console.log("videoSoutce:", videoSource);
+
   publisher
     .setVideoSource(videoSource)
     .then(() => console.log("video source set"))
-    .catch((error) => console.error(error.name));
+    .catch((error) => {
+      console.error(error.name);
+      console.error(error.message);
+    });
 }
 
 function setAudioSource(publisher: OT.Publisher, audioSource: string) {
@@ -71,22 +68,31 @@ function setAudioSource(publisher: OT.Publisher, audioSource: string) {
 }
 
 interface PublisherProps {
-  session: OT.Session;
+  session?: OT.Session;
   audioSource: string;
   videoSource: string;
   publishToSession?: boolean;
   style?: React.CSSProperties;
+  connectToSession?: () => void;
 }
 
 const Publisher: React.FC<PublisherProps> = ({
   session,
   audioSource,
   videoSource,
-  publishToSession,
+  publishToSession = true,
   style = {},
+  connectToSession,
 }) => {
   // const [error, setError] = React.useState("");
-  const [publisher, setPublisher] = React.useState<OT.Publisher>();
+  // const [publisher, setPublisher] = React.useState<OT.Publisher>();
+  let publisher: OT.Publisher | undefined;
+
+  function unpublishPublisher() {
+    if (publisher && publisher.stream) {
+      session?.unpublish(publisher);
+    }
+  }
 
   useEffect(() => {
     if (!session) return;
@@ -94,13 +100,17 @@ const Publisher: React.FC<PublisherProps> = ({
     session.on({
       // This function runs when session.connect() asynchronously completes
       sessionConnected: () => {
-        console.log("on session connected");
-        const publisher = createPublisher(audioSource, videoSource);
-        setPublisher(publisher);
+        console.log(
+          "publisher listened to sessionConnected event from session"
+        );
+        // debugger;
+        publisher = createPublisher(audioSource, videoSource);
+        // setPublisher(publisher);
 
         // We want to control whether we stream to the session or not
         // (e.g.: we don't want to publish when at the Lobby)
         if (publishToSession) {
+          console.log("publisher about to publish to session", publisher);
           session.publish(publisher, handleError);
         }
       },
@@ -112,45 +122,54 @@ const Publisher: React.FC<PublisherProps> = ({
         // publisher.publishAudio(false);
 
         // unpublish the publisher from the session only if it exists:
-        if (publisher.stream) {
-          session.unpublish(publisher);
-        }
+        // if (publisher.stream) {
+        //   session?.unpublish(publisher);
+        // }
+        unpublishPublisher();
         publisher.off();
         publisher.destroy();
-        console.log("session unpublished the publisher, publisher destroyed");
+        publisher = undefined;
+        console.log("Publisher destroyed");
       }
     };
   }, [session, publisher]);
 
-  // const deviceEventListener = (options: any) => {
-  //   console.log("publisher", publisher);
-  //   if (!publisher) return;
-  //   const videoSource = options.detail.videoSource;
-  //   const audioSource = options.detail.audioSource;
-  //   console.log("video input selected", videoSource);
-  //   console.log("audio input selected", audioSource);
-
-  //   window.navigator.mediaDevices
-  //     .getUserMedia({ video: true, audio: true })
-  //     .then((mediaStream) => {
-  //       console.log("mediaStream.getTracks()", mediaStream.getTracks());
-  //       mediaStream.getTracks().forEach((track) => track.stop());
-  //       setVideoSource(publisher, videoSource);
-  //       // mediaStream.getTracks().forEach((track) => track.stop())
-  //     });
-  // };
-
   useEffect(() => {
     if (!publisher || !videoSource) return;
     setVideoSource(publisher, videoSource);
-  }, [videoSource]);
+  }, [publisher, videoSource]);
 
   useEffect(() => {
     if (!publisher || !audioSource) return;
     setAudioSource(publisher, audioSource);
-  }, [audioSource]);
+  }, [audioSource, publisher]);
 
-  return <div id="publisher" style={style} />;
+  return (
+    <>
+      <div id="publisher" style={style} />
+      <button
+        style={{ position: "absolute", bottom: "-10%" }}
+        onClick={() => {
+          unpublishPublisher();
+        }}
+      >
+        UnPublish
+      </button>
+      <button
+        style={{ position: "absolute", bottom: "-15%" }}
+        onClick={() => {
+          if (!publisher) return;
+          if (session?.isConnected()) {
+            session?.publish(publisher, handleError);
+          } else {
+            connectToSession?.();
+          }
+        }}
+      >
+        Restart Publishing
+      </button>
+    </>
+  );
 };
 
 export default Publisher;
