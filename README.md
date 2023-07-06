@@ -1,12 +1,14 @@
 # opentok-react
 
-Leveraging the Opentok library using React. Proof of concept intended to demonstrate call stability.
+Proof of concept (PoC) intended to demonstrate call stability. This app leverages the Opentok library using React.
 
-Please note that this App example was scaffolded using Vite.
+Please note that this project was scaffolded using Vite.
 
-## POC Intention
+## PoC Intention
 
 We want to make sure we can hold a Therapist-to-Member call on the web that is supported by the Opentok library only.
+
+Even though this is just proof-of-concept, the components developed in this project are intended to be as close as possible as the ones integrated into the HelloSelf codebase (less the styling and responsiveness). The logic flow is a simplification of what we want to achieve but a close one nevertheless (the Lobby-Call architecture.)
 
 The Opentok documentation showing a simple code supporting a two-way call can be accesed here: [https://tokbox.com/developer/tutorials/web/basic-video-chat/](https://tokbox.com/developer/tutorials/web/basic-video-chat/)
 
@@ -17,64 +19,111 @@ Run the following scripts to run locally:
 - yarn
 - yarn dev
 
-Once the local server is up and running, we can access the App at [http://localhost:5173/opentok-react/](http://localhost:5173/opentok-react/) from there, we are presented with two links: one for the Member experience, and another for the Therapist.
+Once the local server is up and running, we can access the app at [http://localhost:5173/opentok-react/](http://localhost:5173/opentok-react/) from there, we are presented with two links: one for the Member and the Therapist experience each. (There may be more links available for extra tests).
 
 ## Making sense out of the code
 
 There are two important concepts behind the code: The Lobby and the Call itself.
 
-The Member experience is separated from the Therapist one, that's the reason why there exists a component for each.
+The Member experience is separated from the Therapist one. While they are practically the same, this highlights the intention of having two separate entities that might or might not present different features.
 
-While they are practically the same, this highlights the intention of having two separate entities that might or might not present different features.
+This also means that we are expecting to have two browser windows opened simultaneously to simulate a two-way call: one for the therapist and one for the member.
 
-This also means that we are expecting to have two browser windows opened to simulate a two-way call: one for the therapist and one for the memmber.
+The diagram below depicts the idea of having the Member & Therapist entities joining a Lobby each before jumping into a Call:
+
+![](./public/lobby-call.drawio.svg)
 
 The Lobby is represented by the [GetMediaLobby](src/lib/GetMediaLobby.tsx) component.
 
-The [Therapist](src/lib/Therapist.tsx) and the [Member](src/lib/Member.tsx) components both act as Wrappers of [Call](src/lib/Call.tsx) which is the actual component handling the Call feed.
+The [Therapist](src/lib/Therapist.tsx) and the [Member](src/lib/Member.tsx) components both act as Wrappers of [Call](src/lib/Call.tsx) which is the component handling the Call feed.
 
 ## GetMediaLobby
 
-This component's two main objectives are:
+This component's main objectives are:
 
-- Show who's connected to the call (supporting by polling information from an API `get-members` endpoint)
-- Allow the user to select the devices supporting the video and microphone inputs and the speaker output. If any if the devices is not selected, then the user is not allowed to progress to the Call.
+- Connect to the session using opentok's api. This is useful to check if connecting to the session is possible before jumping into the Call.
+- Show a live video feed using the default camera. If a different camera device is selected, the video feed should reflect the change.
+- Allow the user to select the devices supporting the video and microphone inputs and the speaker output. If any if the devices is not selected, then the user is not allowed to progress to the Call (this is not enforced at the moment).
 
 ## Call component
 
-This is the heart of the POC. Here we are dealing with three entities required to execute a successful call: The `Session`, the `Publisher` and the `Subscriber`.
+The heart of the PoC. Here we deal with three entities required to execute a successful call: The `Session`, the `Publisher` and the `Subscriber`.
 
 Simply put:
 
-- The Session initiates a Call using an `apiKey`, a `token` and a `sessionId`. The Session keeps tabs on both the Publisher and Subscriber all the time, so it knows what happens with them all the time. It is also the one allowing them to be part of a session.
-- The Publisher is our own live video and audio **stream** feed. We start publishing the second we start a call.
-- The Subscriber is someone else's **stream**. When some else starts streaming, the session knows about it and we show that feed onscreen.
+- The Session is encapsulated by the [useOpentokSession](./src/lib/hooks/useOpentokSession.tsx) hook. It instantiates and connects to an opentok session by using an `apiKey`, a `token` and a `sessionId`. This hooks makes the session object available to the rest of the world.
+- The [Publisher](./src/lib/Publisher.tsx) is our own live video and audio **stream** feed. We start publishing the second we start a call.
+- The [Subscriber](./src/lib/Subscriber.tsx) is someone else's **stream**. When some else starts streaming, the session knows about it and we show that feed on-screen.
 
 Both the Publisher and the Subscriber need a DOM element to exist, that's why we can see them onscreen.
 
-`More information regarding these entities can be found at the OpenTok (Vonage) official documentation.`
+There are some important features regarding these entities:
 
-```
-Also, the very first thing this component does is to use the `add-member` endpoint to let the server know that either my therapist or member is connected to the call.
-```
+- The [Call](./src/lib/Call.tsx) component then just composes the entities listed above to create a successful call:
+  1. When mounted, the `useOpentokSession` connects to an opentok session and makes the session object available to the Publisher and Subscriber (they receive it via props).
+  2. The `useOpentokSession` hook gets the opentok's credential by using the mock api we have described previously. It also polls this endpoint as requested by the documentation.
+  3. Once the session object is available, the publisher uses it to start streaming its own video and audio feed
+  4. Once the session object is available, the subscriber uses it to check if there's any stream available and if so, it displays the feed on the DOM
+  5. Each component takes care of executing cleaning up logic on unmount so when we navigate back or refresh the page that routes to the Call component, it works as expected.
 
-## Challenges
+Below is a diagram aiming to depict the anatomy of the Call component:
 
-There are listing the pending challenges that need to be solved moving forward:
+![](./public/call.drawio.svg)
 
-- Coverage for the main browsers (Chrome, Firefox, Edge and Safari) needs to be confirmed. We know of an existing issue whereby the `enumerateDevices` api allowing us to list the exisitng devices doesn't return any audio output devices (speakers) in Firefox. The browser coverage for this api can be seen here: [https://caniuse.com/?search=enumerateDevices](https://caniuse.com/?search=enumerateDevices).
+`The OpenTok (Vonage) official documentation can always be used to get information on the Session, Publisher and Subscriber APIs.`
 
-- When accessing the Lobby for the first time we are not presented with the Browser's Permissio asking us to allow access to our Camera and Microphone. This can be solved by showing the Publisher (out own feed) as part of the Lobby component as required by the Figma design specification [here](https://www.figma.com/file/iQoErKolVASOq4gEfV37z0/Call-stability?type=design&node-id=411-12994&t=vnE7kgDgXRW9Nb2z-4).
+## Mocking the Backend (APIs)
 
-- While the end-to-end call works, connectivity issues haven't been accounted for in this POC, and therefore they are encouraged to be tested and catered for in here before testing them in the HelloSelf platform.
+For the PoC, we needed to create a temporary API that would dub as the real one to be used in the HS platform. It is based in the specification for the `/call-v2/room/{roomId}` endpoint stated in the docs [here](https://github.com/HelloSelf/HelloSelfCallV2#request). In this PoC, we refer to this API as the "mock" api.
 
-- While we are including the `screenshare` as part of this POC using the `web-components` library, we haven't been able to clean/destroy the stream related to it and thus we could be dealing with memory leak. However, this is working and can be included as part of the requirements for P0.
+The mock api is used to get the opentok's credentials (sessionId and tokenId) required to connect to the OT's session but it is also used for polling (as specified in the docs). The mock api that we are using here is `getOpentokCredentials` and can be accessed [here](src/api/callApi.ts). Under the hood, this call is executing a get request to an endpoint hosted at https://opentok-node.onrender.com.
+
+**In order to get the mock api working** we weed to update the opentok's credentials that are served by the mock api. The credentials are stored statically at the `opentok.config.js` file [here](https://github.com/israel-hs/opentok-node/blob/main/opentok.config.js) and we should replace them using the testing credentials made available by opentok's docs [here](https://tokbox.com/developer/quickstart/). These changes need to be commited to the `main` branch of the https://github.com/israel-hs/opentok-node repository.
+
+Once that is done, we need to deploy the changes manually in the server hosted at the [render.com](https://render.com/) platform. At the moment, it is only Israel Romero the one with access and hence the only one who can deploy.
+
+## Unhappy paths
+
+There are many things that could go wrong while trying to get a call between two parties going. Most of these haven't been account for. These paths include:
+
+While at the Lobby:
+
+1. Explicitly denying access to the camera or microphone at the lobby (we display a message/overlay at the lobby when this happens, but probably we need to cover more scenarios)
+1. Disconnecting the default camera once it has already been recognised as the one to be used
+1. Not being able to connect to the opentok session
+
+While at the Call:
+
+1. One of the parties disables the camera mid-call (think of closing your laptop, disconnecting an external camera)
+1. One of the parties' network suddenly disconnects for a short period of time (we were already tackling this scenario at the PoC, please have a look at comments in the Call component)
+1. One of the parties' networks disconnects for a long period of time (say than 10 secs)
+1. **What happens if any of the parties disconnects from the call to never come back??** (important as the therapist is the only one who can close a call/room, what about the member?)
+1. One of the parties' network drops in quality but doesn't really disconnect. What should happen with the call's streaming quality? Do we do something about it? Do we trust on the opentok library to deal with it?
+
+## What needs to be done moving forward
+
+We list the pending challenges that need solving moving forward:
+
+- Coverage for the main browsers (Chrome, Firefox, Edge and Safari) needs to further testing. The issue whereby the `enumerateDevices` doesn't return any audio output devices (speakers) in Firefox has been fixed by Thomas Truong but the solution exists on the HS Member codebase only. Browser coverage for any APIs can be checked here: [https://caniuse.com/?search=enumerateDevices](https://caniuse.com/?search=enumerateDevices).
+
+- As mentioned at the unhappy paths, there are many scenarios why the user may have denied access to camera/mic. It could be due to explicitly denying it by error, or browser/OS restrictions. Accounting for these scenarios improves the UI. There's a medium [article](https://medium.com/joinglimpse/how-to-build-beautiful-camera-microphone-permission-checking-for-websites-e6a08415fa76) tackling this issue by incorporating the [mic-check](https://github.com/helenamerk/mic-check) open-source library. We even tried incorporating an example into this PoC through the [MediaOnBoardingDialog](./src/lib/MediaOnboardingDialog.tsx) component which is a copy-paste of an example at the `mic-check` library. There's a link to this component at the same place where we dsiplay the Lobby and Therapist links. Worth having a look.
+
+- While the end-to-end call works, connectivity issues haven't been accounted for in this PoC, and therefore they are encouraged to be tested and catered for in here before testing them in the HelloSelf platform.
+
+- While we are including the `screenshare` as part of this PoC using the `web-components` library, we haven't been able to clean/destroy the stream related to it and thus we could be dealing with memory leak.
 
 - Event logging needs to be accounted for. A list of the events that we are already logging in the backend for the Member and Expert platforms should be compared against the events we are logging (to the console) already. The full list of events for each of the entities can be found at the utils [here](src/lib/utils.ts).
 
-# GitHub pages
+- Alan requested incorporating the following features:
 
-This POC app can be accessed via GitHub pages at [https://israel-hs.github.io/opentok-react/](https://israel-hs.github.io/opentok-react/).
+  1. The call should display more than one stream. Due to past security issues, we'd like to show any person (stream) that connects to the session reflected in the UI. This means we want to have the Subscriber adapt its style to show all streams connected (maybe in a grid fashion).
+  1. We should allow a background filter into the call. Check Vonage's documentation to achieve this.
+
+- To test bad connectivity, Alan suggested using [Charles Proxy](https://www.charlesproxy.com/documentation/proxying/throttling/).
+
+## GitHub pages
+
+This PoC app can be accessed via GitHub pages at [https://israel-hs.github.io/opentok-react/](https://israel-hs.github.io/opentok-react/).
 
 In order to publish any new development, just run the deploy script by executing `yarn deploy`. This will use local changes to update the artifacts in the GitHub page configuration related to this codebase.
 
