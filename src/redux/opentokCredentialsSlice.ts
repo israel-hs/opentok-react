@@ -1,6 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
-import { AppDispatch } from "./store";
 
 export interface OpentokCredentialsState {
   sessionId: string | null;

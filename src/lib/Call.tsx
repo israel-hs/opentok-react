@@ -1,41 +1,35 @@
-import OT from "@opentok/client";
-import { CallProps } from "./types";
-import { addMember } from "../api/callApi";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect } from "react";
+import { useLocation } from "react-router-dom";
 
+import { CallProps } from "./types";
 import Publisher from "./Publisher";
 import Subscriber from "./Subscriber";
-import "@vonage/screen-share/screen-share.js";
 import useOpentokSession from "./hooks/useOpentokSession";
-import { useLocation } from "react-router-dom";
-// import { styled } from "styled-components";
 
-const Call: React.FC<CallProps> = ({ userId, sendSignal }) => {
+import "@vonage/screen-share/screen-share.js";
+
+const Call: React.FC<CallProps> = ({ sendSignal }) => {
   const location = useLocation();
 
   const { videoDeviceId, microphoneDeviceId } = location.state || {};
-  const { opentokSession: session, signalText, error } = useOpentokSession();
+  const {
+    opentokSession: session,
+    connectToSession,
+    // signalText,
+    // error,
+  } = useOpentokSession(false);
+  // const [key, setKey] = useState(0);
 
-  console.log({ videoDeviceId, microphoneDeviceId });
+  // console.log({ videoDeviceId, microphoneDeviceId });
 
-  const screenshare = useRef<
-    HTMLElement & { session: OT.Session; token: string }
-  >(null);
+  // const screenshare = useRef<
+  //   HTMLElement & { session: OT.Session; token: string }
+  // >(null);
 
   // let stream: OT.Stream | null;
-  console.log("session", session);
 
   useEffect(() => {
     if (!session) return;
-
-    const addMemberToCall = async () => {
-      try {
-        await addMember(userId);
-      } catch (error) {
-        console.error(error);
-      }
-    };
-    addMemberToCall();
 
     // we might need poll data from the server every N secs
     // to check for members connecting and desconnecting for example
@@ -64,29 +58,28 @@ const Call: React.FC<CallProps> = ({ userId, sendSignal }) => {
 
     return () => {
       // clearInterval(interval);
-      console.log("unmounting component");
-
+      // console.log("unmounting component");
       // this is not working: this cleanup function is invoked after unmount
       // therefore screenshare.current reference is already null:
-      if (screenshare.current) {
-        screenshare.current?.remove();
-        // (screenshare.current as any).disconnectedCallback();
-      }
+      // if (screenshare.current) {
+      //   screenshare.current?.remove();
+      //   // (screenshare.current as any).disconnectedCallback();
+      // }
     };
   }, [session]);
 
-  if (error) {
-    return <div>{error}</div>;
-  }
+  // if (error) {
+  //   return <div>{error}</div>;
+  // }
 
-  if (!session) {
-    return (
-      <div id="videos">
-        <div id="subscriber" />
-        <div id="publisher" />
-      </div>
-    );
-  }
+  // if (!session) {
+  //   return (
+  //     <div id="videos">
+  //       <div id="subscriber" />
+  //       <div id="publisher" />
+  //     </div>
+  //   );
+  // }
 
   const canSendSignal = sendSignal && session;
 
@@ -97,10 +90,10 @@ const Call: React.FC<CallProps> = ({ userId, sendSignal }) => {
           session={session}
           videoSource={videoDeviceId}
           audioSource={microphoneDeviceId}
+          connectToSession={connectToSession}
         />
         <Subscriber session={session} />
       </div>
-      {signalText && <div style={{ marginTop: "10px" }}>{signalText}</div>}
       {/* <screen-share
         start-text="start screen share"
         stop-text="stop screen share"
@@ -111,7 +104,6 @@ const Call: React.FC<CallProps> = ({ userId, sendSignal }) => {
       {canSendSignal && (
         <button
           onClick={() => {
-            // console.log({ session });
             sendSignal(session);
           }}
         >
@@ -137,16 +129,16 @@ export default Call;
 //   }
 // `;
 
-declare global {
-  namespace JSX {
-    interface IntrinsicElements {
-      "screen-share": React.DetailedHTMLProps<
-        React.HTMLAttributes<HTMLElement>,
-        HTMLElement
-      > & {
-        width: string;
-        height: string;
-      };
-    }
-  }
-}
+// declare global {
+//   namespace JSX {
+//     interface IntrinsicElements {
+//       "screen-share": React.DetailedHTMLProps<
+//         React.HTMLAttributes<HTMLElement>,
+//         HTMLElement
+//       > & {
+//         width: string;
+//         height: string;
+//       };
+//     }
+//   }
+// }
