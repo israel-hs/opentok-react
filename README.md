@@ -123,10 +123,49 @@ We list the pending challenges that need solving moving forward:
 
 ## GitHub pages
 
-This PoC app can be accessed via GitHub pages at [https://israel-hs.github.io/opentok-react/](https://israel-hs.github.io/opentok-react/).
+This PoC can be accessed via GitHub pages at [https://israel-hs.github.io/opentok-react/](https://israel-hs.github.io/opentok-react/).
 
 In order to publish any new development, just run the deploy script by executing `yarn deploy`. This will use local changes to update the artifacts in the GitHub page configuration related to this codebase.
 
 ## Troubleshooting
 
 As this project is hardcoding the `token` and `sessionId` required to connect to a sesssion, and as these entities can exipre, we need to manually update them at our codebase. The `apikey`, along with the `token` and `sessionId` can be copy-pasted from a OpenTok example here: [https://tokbox.com/developer/quickstart/](https://tokbox.com/developer/quickstart/) (see _Step 1 of 5: Authentication_ section to copy the info).
+
+## Reconnnection
+
+Having a robust, stable re-connection mechanism after a network connection drops in the middle of the call is one of the most sensible parts of this app. We ultimately want to bring stability to the call experience.
+
+When we successfully connect to an opentok session and get our publisher and subscriber streams going, all these entities keep track of the connection being alive by receiving heartbeats to and fro the server. The moment the connection is lost, the entities no longer receive the heartbeats and thus know there's something wrong. This is where **events** are started to beign triggered by the Session, Publisher and Subscriber at different times, for different reasons. But we want to concentrate in a few at the moment:
+
+So, at the moment our network connection is drop in the middle of a call:
+
+<u>From the point of view of the party that loses connection</u>:
+
+1. Session triggers a `reconnecting` event (which can be useful to update the UI to show an icon placeholder the way Google Meet does it when a connection is dropped)
+1. Subscriber triggers a `disconnected` event (we don't act on this one, we list it only for reference)
+1. if we reconnect to the call fairly quick (~10 secs):
+
+   - Session triggers a `reconnected` event (meaning the session is still connected)
+   - Subsciber triggers a `destroyed` event (we act upon this as we need the other party that never disconnected to re-publish its stream by triggering a `signal:republish`)
+
+1. if we reconnect to the call after some longer time (>15 secs)
+
+   - Session triggers a `destroyed` event (we need to confirm this), meaning that even if the session object is not null, the session is disconnected, and thus the logic needs adjusting
+   - **Need to investigate further and define what to do in this scenario**
+
+The sequence diagram below aims to depict what happens behind the scenes with the components when we lose connection:
+
+![](./public/reconnection.drawio.svg)
+
+At the moment the PoC successfully and automatically reconnects to the call after a network connection is lost **as long as we reconnect to the call between 10-25 secs**, which means that we do not lose the active connection to the opentok session.
+
+Please have a look at the comments added to:
+
+1. `signal:republish` event listener to the [Publisher](./src/lib/Publisher.tsx)
+1. `destroyed` event listener to the [Subscriber](./src/lib/Subscriber.tsx) components
+
+**Remember**: We haven't tacled the unhappy path were we lose connection to the Opentok session by losing network connectivity for a longer period of time\*\* (say more that 20 secs)
+
+## Removed from this branch
+
+1. The `inputs-select` element (from opentok's [web-components](https://github.com/opentok/web-components/tree/main/inputs-select) demo repo) was removed from this branch as it is unlikely to be used on our final implementation. It can still be accessed at the `refactor/call` branch [here](https://github.com/israel-hs/opentok-react/blob/refactor/call/src/lib/GetMediaLobby.tsx)

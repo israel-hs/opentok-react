@@ -9,8 +9,6 @@ import useOpentokSession from "./hooks/useOpentokSession";
 
 import "./devices.css";
 
-import "@vonage/inputs-select/inputs-select.js";
-
 /**
  * This component is meant to wrap a Video component and initially
  * check if someone else is connected (publishing) already.
@@ -46,27 +44,6 @@ const Lobby: React.FC<LobbyProps> = ({ /*memberId,*/ linkTo }) => {
     setMicrophone(microphoneDevices[0].deviceId);
   }, [videoDevices, microphoneDevices]);
 
-  // useEffect(() => {
-  //   // if (!videoDevices.length || !microphoneDevices.length) return;
-
-  //   // setVideo(videoDevices[0].deviceId);
-  //   // setMicrophone(microphoneDevices[0].deviceId);
-
-  //   window.addEventListener("inputsSelected", (options: any) => {
-  //     console.log("video input selected", options.detail.videoSource);
-  //     console.log("audio input selected", options.detail.audioSource);
-  //     setVideo(options.detail.videoSource);
-  //     setMicrophone(options.detail.audioSource);
-  //   });
-
-  //   return () => {
-  //     window.removeEventListener("inputsSelected", (options) => {
-  //       console.log("inputsSelected removed", options);
-  //     });
-  //   };
-  // }, []);
-  //}, [videoDevices, microphoneDevices]);
-
   const allDevicesAvailable = !!video && !!microphone; // && !!speakers
 
   if (sessionError) {
@@ -77,8 +54,6 @@ const Lobby: React.FC<LobbyProps> = ({ /*memberId,*/ linkTo }) => {
     );
   }
 
-  // console.log("video", video);
-  // console.log("microphone", microphone);
   console.log("allDevicesAvailable", allDevicesAvailable);
 
   if (!session || !allDevicesAvailable) {
@@ -124,11 +99,6 @@ const Lobby: React.FC<LobbyProps> = ({ /*memberId,*/ linkTo }) => {
                 updateDeviceId={setSpeakers}
               />
             )} */}
-            {/* <inputs-select
-              audio-label="Audio Inputs:"
-              video-label="Video Inputs:"
-              button-text="Update selection"
-            ></inputs-select> */}
           </div>
           <Link
             to={`/opentok-react/${linkTo}`}
@@ -147,20 +117,3 @@ const Lobby: React.FC<LobbyProps> = ({ /*memberId,*/ linkTo }) => {
 };
 
 export default Lobby;
-
-// wrap Publisher component in a styled component and specify a width and height
-// const StyledPublisher = styled(Publisher)`
-//   width: 150px;
-//   height: 250px;
-// `;
-
-// declare global {
-//   namespace JSX {
-//     interface IntrinsicElements {
-//       "inputs-select": React.DetailedHTMLProps<
-//         React.HTMLAttributes<HTMLElement>,
-//         HTMLElement
-//       >;
-//     }
-//   }
-// }

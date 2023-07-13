@@ -28,3 +28,5 @@ export type StreamDestroyedEvent = OT.Event<"streamDestroyed", OT.Publisher> & {
 };
 
 export type RoomInfo = { openTokSessionId: string; openTokAccessToken: string };
+
+export type OpentokSession = OT.Session & { isConnected: () => boolean };

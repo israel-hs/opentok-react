@@ -4,7 +4,12 @@ import { useEffect, useState } from "react";
 import { apiKey } from "../../opentok.config";
 import { getOpentokCredentials } from "../../api/callApi";
 import { createSessionListenersMap, handleError } from "../utils";
-import { RoomInfo, SignalEvent, StreamDestroyedEvent } from "../types";
+import type {
+  OpentokSession,
+  RoomInfo,
+  SignalEvent,
+  StreamDestroyedEvent,
+} from "../types";
 
 function pollFunction(functionToPoll: () => void, interval: number) {
   return setInterval(functionToPoll, interval);
@@ -17,10 +22,10 @@ const useOpentokSession = (shouldPoll?: boolean) => {
   const [error, setError] = useState("");
   const [signalText, setSignalText] = useState("");
   const [roomInfo, setRoomInfo] = useState<RoomInfo>();
-  const [opentokSession, setOpentokSession] = useState<OT.Session>();
+  const [opentokSession, setOpentokSession] = useState<OpentokSession>();
   const [pollFrequency, setPollFrequency] = useState(pollEveryWhenConnected);
 
-  let session: OT.Session | undefined;
+  let session: OpentokSession | undefined;
 
   function connectToSession() {
     const { openTokAccessToken } = roomInfo || {};
@@ -73,11 +78,11 @@ const useOpentokSession = (shouldPoll?: boolean) => {
   useEffect(() => {
     if (!roomInfo) return;
 
-    const { openTokSessionId, openTokAccessToken } = roomInfo;
-    session = OT.initSession(apiKey, openTokSessionId);
+    const { openTokSessionId /*, openTokAccessToken*/ } = roomInfo;
+    session = OT.initSession(apiKey, openTokSessionId) as OpentokSession;
     console.log("session is initialized");
     // session.connect(openTokAccessToken, handleError);
-    connectToSession(openTokAccessToken);
+    connectToSession();
 
     const sessionEvents = createSessionListenersMap();
 

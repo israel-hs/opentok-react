@@ -4,13 +4,16 @@ import {
   createSubscriberListenerMap,
   handleError,
 } from "./utils";
-import { StreamCreatedEvent } from "./types";
+import { OpentokSession, StreamCreatedEvent } from "./types";
 
 interface SubscriberProps {
-  session?: OT.Session;
+  session?: OpentokSession;
 }
 
-const subscribeToSession = (session: OT.Session, streamToUse: OT.Stream) => {
+const subscribeToSession = (
+  session: OpentokSession,
+  streamToUse: OT.Stream
+) => {
   return session.subscribe(
     streamToUse,
     "subscriber",
@@ -35,7 +38,6 @@ const Subscriber: React.FC<SubscriberProps> = ({ session }) => {
       streamCreated: (event: StreamCreatedEvent) => {
         // Subscribe to a newly created stream
         console.log("streamCreated", event);
-        // debugger;
         subscriber = subscribeToSession(session, event.stream);
         if (!subscriber) return;
 
@@ -44,11 +46,23 @@ const Subscriber: React.FC<SubscriberProps> = ({ session }) => {
         // prevent the subscriber from being removed from the DOM
         subscriber.on({
           ...subscriberEvents,
-          disconnected: () => {
-            console.log("subscriber disconnected");
-            // if (subscriber?.stream) {
-            //   session.unsubscribe(subscriber);
-            // }
+          /**
+           * This subsciber event is triggered when re-gaining connectivity after
+           * losing connection locally. When the subscriber is destroyed it means
+           * we cannot longer receive the stream from the other party. So, we ask
+           * the other party to republish the stream to the session by sending a
+           * signal.
+           *
+           * Bear in mind that this signal is only triggered if we  still have a
+           * connected session after re-connecting. We need to do something else
+           * if not.
+           */
+          destroyed: () => {
+            console.log("subscriber destroyed");
+            if (session && session.isConnected()) {
+              console.log("sending republish signal");
+              session.signal({ type: "republish" }, handleError);
+            }
           },
         });
       },

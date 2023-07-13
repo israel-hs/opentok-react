@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { StreamDestroyedEvent } from "./types";
+import { OpentokSession, SignalEvent, StreamDestroyedEvent } from "./types";
 import {
   createPublisherListernerMap,
   handleError,
@@ -68,7 +68,7 @@ function setAudioSource(publisher: OT.Publisher, audioSource: string) {
 }
 
 interface PublisherProps {
-  session?: OT.Session;
+  session?: OpentokSession;
   audioSource: string;
   videoSource: string;
   publishToSession?: boolean;
@@ -103,7 +103,6 @@ const Publisher: React.FC<PublisherProps> = ({
         console.log(
           "publisher listened to sessionConnected event from session"
         );
-        // debugger;
         publisher = createPublisher(audioSource, videoSource);
         // setPublisher(publisher);
 
@@ -114,13 +113,25 @@ const Publisher: React.FC<PublisherProps> = ({
           session.publish(publisher, handleError);
         }
       },
+      /**
+       * The Publisher listens to the signal:republish event so that it can
+       * republish itself to the session when the other party stops showing
+       * the subscriber feed due to the subscriber being destroyed (due to
+       * network fail).
+       */
+      "signal:republish": (event: SignalEvent) => {
+        if (!session || !publisher) return;
+        // const sender = event.data; // can we evaluate who's calling us here?
+        const sentFromElsewhere = event.from !== session.connection;
+
+        // important: we only republish if the signal was sent from elsewhere
+        if (!sentFromElsewhere) return;
+        session.publish(publisher, handleError);
+      },
     });
 
     return () => {
       if (publisher) {
-        // publisher.publishVideo(false);
-        // publisher.publishAudio(false);
-
         // unpublish the publisher from the session only if it exists:
         // if (publisher.stream) {
         //   session?.unpublish(publisher);
@@ -159,7 +170,7 @@ const Publisher: React.FC<PublisherProps> = ({
         style={{ position: "absolute", bottom: "-15%" }}
         onClick={() => {
           if (!publisher) return;
-          if (session?.isConnected()) {
+          if (session && session.isConnected()) {
             session?.publish(publisher, handleError);
           } else {
             connectToSession?.();
