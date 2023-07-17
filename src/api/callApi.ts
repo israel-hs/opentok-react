@@ -1,4 +1,5 @@
 import { baseURL } from "../config";
+import { RoomInfo } from "../lib/types";
 
 export const addMember = async (memberId: string) => {
   try {
@@ -44,19 +45,15 @@ export const removeMember = async (member: string) => {
 
 export const getOpentokCredentials = async (
   roomId: number,
-  signal: AbortSignal
-): Promise<{ openTokSessionId: string; openTokAccessToken: string }> => {
-  try {
-    const response = await fetch(`${baseURL}/call-v2/room/${roomId}`, {
-      headers: {
-        "Content-Type": "application/json",
-      },
-      signal,
-    });
+  signal?: AbortSignal
+): Promise<RoomInfo> => {
+  const response = await fetch(`${baseURL}/call-v2/room/${roomId}`, {
+    headers: {
+      "Content-Type": "application/json",
+    },
+    signal,
+  });
 
-    if (!response.ok) throw Error("error while retrieving opentok credentials");
-    return response.json();
-  } catch (error) {
-    throw error;
-  }
+  if (!response.ok) throw Error("error while retrieving opentok credentials");
+  return response.json();
 };
