@@ -121,6 +121,8 @@ We list the pending challenges that need solving moving forward:
 
 - To test bad connectivity, Alan suggested using [Charles Proxy](https://www.charlesproxy.com/documentation/proxying/throttling/).
 
+- We might want to adjust the quality of the video somehow by checking the connection status of the call. I am not sure on how to achieve this but it is worth having a look at this link from the documentation: https://tokbox.com/developer/guides/publish-stream/js/#get_stats
+
 ## GitHub pages
 
 This PoC can be accessed via GitHub pages at [https://israel-hs.github.io/opentok-react/](https://israel-hs.github.io/opentok-react/).
@@ -165,6 +167,10 @@ Please have a look at the comments added to:
 1. `destroyed` event listener to the [Subscriber](./src/lib/Subscriber.tsx) components
 
 **Remember**: We haven't tacled the unhappy path were we lose connection to the Opentok session by losing network connectivity for a longer period of time\*\* (say more that 20 secs)
+
+## Aplitude Boards
+
+Alan provided a link to an Amplitude board where we can see browser usage by users. We should filter by 'web' platform as I think this shows data for mobile users as well: https://app.amplitude.com/analytics/HelloSelf/chart/new/3wo5favd
 
 ## Removed from this branch
 
